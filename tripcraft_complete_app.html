@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TripCraft - Travel Dashboard</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        /* Hide scrollbar for clean UI but keep functionality */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .view-section {
+            display: none;
+            animation: fadeIn 0.4s ease-in-out;
+        }
+        .view-section.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased h-screen overflow-hidden flex">
+
+    <!-- Mobile Sidebar Overlay -->
+    <div id="mobile-overlay" class="fixed inset-0 bg-slate-900/50 z-40 hidden md:hidden transition-opacity" onclick="toggleSidebar()"></div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="bg-white w-64 h-full border-r border-slate-200 flex flex-col fixed md:relative z-50 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out">
+        <!-- Logo -->
+        <div class="h-16 flex items-center px-6 border-b border-slate-200">
+            <div class="flex items-center gap-2 text-primary-600">
+                <i class="fa-solid fa-plane-departure text-xl"></i>
+                <span class="text-xl font-bold tracking-tight">TripCraft</span>
+            </div>
+            <button onclick="toggleSidebar()" class="ml-auto md:hidden text-slate-500 hover:text-slate-800">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+
+        <!-- Navigation Links -->
+        <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
+            <button onclick="switchView('dashboard')" id="nav-dashboard" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors bg-primary-50 text-primary-700 font-medium">
+                <i class="fa-solid fa-border-all w-5 text-center"></i>
+                Dashboard
+            </button>
+            <button onclick="switchView('discover')" id="nav-discover" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium">
+                <i class="fa-solid fa-compass w-5 text-center"></i>
+                Discover Destinations
+            </button>
+            <button class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium mt-4 cursor-not-allowed opacity-60">
+                <i class="fa-solid fa-suitcase-rolling w-5 text-center"></i>
+                My Trips
+            </button>
+            <button class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium cursor-not-allowed opacity-60">
+                <i class="fa-solid fa-heart w-5 text-center"></i>
+                Saved
+            </button>
+        </nav>
+
+        <!-- User Profile (Bottom of Sidebar) -->
+        <div class="p-4 border-t border-slate-200">
+            <div class="flex items-center gap-3 cursor-pointer hover:bg-slate-50 p-2 rounded-lg transition-colors">
+                <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-1.2.1&auto=format&fit=crop&w=100&q=80" 
+                     onerror="this.src='https://placehold.co/100x100/e2e8f0/475569?text=User'" 
+                     alt="User Profile" 
+                     class="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm">
+                <div>
+                    <p class="text-sm font-semibold text-slate-800">Alex Walker</p>
+                    <p class="text-xs text-slate-500">Pro Traveler</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 flex flex-col h-full overflow-hidden bg-slate-50">
+        
+        <!-- Header -->
+        <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 sm:px-6 lg:px-8 shrink-0">
+            <div class="flex items-center gap-4">
+                <button onclick="toggleSidebar()" class="md:hidden text-slate-500 hover:text-slate-800 focus:outline-none">
+                    <i class="fa-solid fa-bars text-xl"></i>
+                </button>
+                <div class="relative hidden sm:block">
+                    <i class="fa-solid fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
+                    <input type="text" placeholder="Search destinations, trips..." class="pl-10 pr-4 py-2 bg-slate-100 border-transparent rounded-full text-sm focus:bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all w-64">
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <button class="relative p-2 text-slate-500 hover:text-slate-800 transition-colors">
+                    <i class="fa-regular fa-bell text-xl"></i>
+                    <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
+                </button>
+                <button onclick="switchView('new-trip')" class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm hidden sm:block">
+                    <i class="fa-solid fa-plus mr-2"></i>New Trip
+                </button>
+                <!-- Mobile New Trip Button (Icon Only) -->
+                <button onclick="switchView('new-trip')" class="bg-primary-600 hover:bg-primary-700 text-white w-9 h-9 rounded-lg text-sm font-medium transition-colors shadow-sm sm:hidden flex items-center justify-center">
+                    <i class="fa-solid fa-plus"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Scrollable Content Container -->
+        <div class="flex-1 overflow-y-auto no-scrollbar p-4 sm:p-6 lg:p-8 relative">
+            
+            <!-- Dashboard View -->
+            <div id="view-dashboard" class="view-section active space-y-6 max-w-6xl mx-auto">
+                
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <h1 class="text-2xl font-bold text-slate-900">Welcome back, Alex! 👋</h1>
+                        <p class="text-slate-500 mt-1">Here is what's happening with your travel plans.</p>
+                    </div>
+                </div>
+
+                <!-- Alert Banner -->
+                <div id="dashboard-alert" class="bg-amber-50 border border-amber-200 rounded-xl p-4 shadow-sm flex items-start justify-between relative overflow-hidden transition-all duration-300">
+                    <div class="absolute left-0 top-0 bottom-0 w-1 bg-amber-500"></div>
+                    <div class="flex gap-3">
+                        <div class="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 shrink-0 mt-0.5">
+                            <i class="fa-solid fa-plane-arrival"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-bold text-amber-900">Flight Status Update</h4>
+                            <p class="text-sm text-amber-700 mt-0.5">Your upcoming flight to Paris (AF1234) on Oct 24 has a minor schedule change. Departure is now 10:45 AM.</p>
+                        </div>
+                    </div>
+                    <button onclick="document.getElementById('dashboard-alert').style.display='none'" class="text-amber-400 hover:text-amber-600 transition-colors p-1 shrink-0">
+                        <i class="fa-solid fa-xmark text-lg"></i>
+                    </button>
+                </div>
+
+                <!-- Stats Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6">
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow">
+                        <div class="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 shrink-0">
+                            <i class="fa-solid fa-passport text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-slate-500">Countries Visited</p>
+                            <p class="text-2xl font-bold text-slate-900">14</p>
+                        </div>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow">
+                        <div class="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0">
+                            <i class="fa-solid fa-map-location-dot text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-slate-500">Total Trips</p>
+                            <p class="text-2xl font-bold text-slate-900">28</p>
+                        </div>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow">
+                        <div class="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600 shrink-0">
+                            <i class="fa-solid fa-calendar-check text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-slate-500">Upcoming Trips</p>
+                            <p class="text-2xl font-bold text-slate-900">2</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                    
+                    <!-- Left Column: Upcoming Trip & Recommendations -->
+                    <div class="xl:col-span-2 space-y-6">
+                        
+                        <!-- Upcoming Trip Card -->
+                        <div>
+                            <h2 class="text-lg font-bold text-slate-800 mb-4">Next Adventure</h2>
+                            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col md:flex-row hover:shadow-md transition-shadow">
+                                <div class="md:w-2/5 h-48 md:h-auto relative">
+                                    <img src="https://images.unsplash.com/photo-1499856871958-5b9627545d1a?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" 
+                                         onerror="this.src='https://placehold.co/800x600/e2e8f0/475569?text=Paris+Trip'" 
+                                         alt="Paris" 
+                                         class="w-full h-full object-cover">
+                                    <div class="absolute top-4 left-4 bg-white/90 backdrop-blur text-slate-800 text-xs font-bold px-3 py-1 rounded-full shadow-sm">
+                                        In 12 Days
+                                    </div>
+                                </div>
+                                <div class="p-6 md:w-3/5 flex flex-col justify-center">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <h3 class="text-xl font-bold text-slate-900">Parisian Getaway</h3>
+                                        <button class="text-slate-400 hover:text-primary-600 transition-colors">
+                                            <i class="fa-solid fa-ellipsis-vertical"></i>
+                                        </button>
+                                    </div>
+                                    <p class="text-slate-500 text-sm flex items-center gap-2 mb-4">
+                                        <i class="fa-regular fa-calendar"></i> Oct 24 - Oct 30, 2026
+                                    </p>
+                                    
+                                    <div class="mb-4">
+                                        <div class="flex justify-between text-xs font-medium text-slate-500 mb-1">
+                                            <span>Itinerary Progress</span>
+                                            <span>80% Planned</span>
+                                        </div>
+                                        <div class="w-full bg-slate-100 rounded-full h-2">
+                                            <div class="bg-primary-500 h-2 rounded-full" style="width: 80%"></div>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex gap-3 mt-auto">
+                                        <button class="px-4 py-2 bg-primary-50 text-primary-700 rounded-lg text-sm font-medium hover:bg-primary-100 transition-colors flex-1">
+                                            View Itinerary
+                                        </button>
+                                        <button class="px-4 py-2 border border-slate-200 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors flex-1">
+                                            Add Bookings
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Recommended Trips -->
+                        <div>
+                            <div class="flex justify-between items-center mb-4">
+                                <h2 class="text-lg font-bold text-slate-800">Recommended For You</h2>
+                                <button class="text-sm font-medium text-primary-600 hover:text-primary-700">See all</button>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <!-- Recommendation 1 -->
+                                <div class="bg-white rounded-2xl border border-slate-200 p-3 shadow-sm hover:shadow-md transition-shadow flex gap-4 cursor-pointer group">
+                                    <img src="https://images.unsplash.com/photo-1523482580672-f109ba8cb9be?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&q=80" 
+                                         alt="Australia" class="w-24 h-24 rounded-xl object-cover group-hover:scale-105 transition-transform duration-300 shrink-0">
+                                    <div class="flex flex-col justify-center flex-1">
+                                        <div class="flex justify-between items-start">
+                                            <h4 class="font-bold text-slate-900">Sydney, Australia</h4>
+                                            <span class="text-xs font-bold text-amber-500 flex items-center gap-1"><i class="fa-solid fa-star"></i> 4.9</span>
+                                        </div>
+                                        <p class="text-xs text-slate-500 mt-1 line-clamp-2">Experience the iconic opera house and stunning beaches.</p>
+                                        <div class="mt-2 text-sm font-semibold text-primary-600">From $1,200</div>
+                                    </div>
+                                </div>
+                                <!-- Recommendation 2 -->
+                                <div class="bg-white rounded-2xl border border-slate-200 p-3 shadow-sm hover:shadow-md transition-shadow flex gap-4 cursor-pointer group">
+                                    <img src="https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&q=80" 
+                                         alt="Japan" class="w-24 h-24 rounded-xl object-cover group-hover:scale-105 transition-transform duration-300 shrink-0">
+                                    <div class="flex flex-col justify-center flex-1">
+                                        <div class="flex justify-between items-start">
+                                            <h4 class="font-bold text-slate-900">Kyoto, Japan</h4>
+                                            <span class="text-xs font-bold text-amber-500 flex items-center gap-1"><i class="fa-solid fa-star"></i> 4.8</span>
+                                        </div>
+                                        <p class="text-xs text-slate-500 mt-1 line-clamp-2">Discover ancient temples and beautiful cherry blossoms.</p>
+                                        <div class="mt-2 text-sm font-semibold text-primary-600">From $950</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Right Column: Tools & Widgets -->
+                    <div class="space-y-6">
+                        
+                        <!-- Live Weather Forecast Card -->
+                        <div class="bg-gradient-to-br from-blue-500 to-primary-700 rounded-2xl shadow-sm text-white overflow-hidden relative">
+                            <!-- Background decoration -->
+                            <i class="fa-solid fa-cloud absolute -top-8 -right-8 text-8xl text-white/10"></i>
+                            
+                            <div class="p-5 relative z-10">
+                                <div class="flex justify-between items-center mb-4">
+                                    <div>
+                                        <h3 class="font-bold text-lg">Paris, France</h3>
+                                        <p class="text-blue-100 text-xs">Destination Weather (Live)</p>
+                                    </div>
+                                    <button onclick="renderWeather()" class="text-white/80 hover:text-white transition-colors" title="Refresh Weather">
+                                        <i class="fa-solid fa-rotate-right text-sm"></i>
+                                    </button>
+                                </div>
+
+                                <div id="weather-content" class="min-h-[120px] flex flex-col justify-center">
+                                    <div class="flex items-center gap-4 mb-6">
+                                        <i class="fa-solid fa-circle-notch fa-spin text-3xl"></i>
+                                        <span class="text-sm">Fetching live weather...</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Working Calendar Card -->
+                        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 id="month-year-text" class="font-bold text-slate-900">October 2026</h3>
+                                <div class="flex gap-2">
+                                    <!-- In a full app, these would change months. Visual only for now -->
+                                    <button class="w-7 h-7 rounded-lg flex items-center justify-center text-slate-500 hover:bg-slate-100 transition-colors">
+                                        <i class="fa-solid fa-chevron-left text-xs"></i>
+                                    </button>
+                                    <button class="w-7 h-7 rounded-lg flex items-center justify-center text-slate-500 hover:bg-slate-100 transition-colors">
+                                        <i class="fa-solid fa-chevron-right text-xs"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Calendar Grid Container -->
+                            <div id="calendar-grid" class="grid grid-cols-7 gap-y-2 text-center">
+                                <!-- Generated by JS -->
+                            </div>
+                            
+                            <div class="mt-4 pt-4 border-t border-slate-100 flex items-center gap-4 text-xs text-slate-500">
+                                <div class="flex items-center gap-1.5">
+                                    <span class="w-2 h-2 rounded-full bg-primary-600"></span> Today
+                                </div>
+                                <div class="flex items-center gap-1.5">
+                                    <span class="w-2 h-2 rounded-full bg-primary-100 border border-primary-300"></span> Trip Dates
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- Discover Destinations View -->
+            <div id="view-discover" class="view-section space-y-6 max-w-6xl mx-auto">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <h1 class="text-2xl font-bold text-slate-900">Discover Destinations</h1>
+                        <p class="text-slate-500 mt-1">Find inspiration for your next unforgettable journey from our complete list of countries.</p>
+                    </div>
+                    <div class="flex gap-2 w-full sm:w-auto">
+                        <div class="relative w-full sm:w-64">
+                            <i class="fa-solid fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
+                            <input type="text" id="country-search" placeholder="Search countries..." class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-between items-center">
+                    <span id="destinations-count" class="text-sm font-medium text-slate-500">Loading countries...</span>
+                </div>
+
+                <!-- Destinations Grid -->
+                <div id="destinations-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-10">
+                    <!-- Cards will be dynamically inserted here -->
+                </div>
+            </div>
+
+            <!-- New Trip Form View -->
+            <div id="view-new-trip" class="view-section space-y-6 max-w-4xl mx-auto pb-10">
+                <div class="text-center mb-8 pt-4">
+                    <h1 class="text-3xl font-bold text-slate-900 mb-2">Plan a new adventure ✈️</h1>
+                    <p class="text-slate-500">Tell us what your ideal trip looks like. TripCraft AI will build a personalized itinerary.</p>
+                </div>
+
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8 space-y-8 relative overflow-hidden">
+                    <!-- Loading Overlay for AI Generation -->
+                    <div id="ai-loading-overlay" class="absolute inset-0 bg-white/90 backdrop-blur-sm z-10 flex-col items-center justify-center hidden">
+                        <div class="relative w-20 h-20 mb-4">
+                            <div class="absolute inset-0 border-4 border-slate-100 rounded-full"></div>
+                            <div class="absolute inset-0 border-4 border-primary-600 rounded-full border-t-transparent animate-spin"></div>
+                            <i class="fa-solid fa-wand-magic-sparkles absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-primary-600 text-xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-900">Crafting your perfect trip...</h3>
+                        <p class="text-slate-500 mt-2 text-sm text-center max-w-xs">Analyzing millions of data points to build your personalized itinerary.</p>
+                    </div>
+
+                    <!-- 1 & 2: Destinations -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-bold text-slate-900 mb-2">1. Where are you starting from?</label>
+                            <div class="relative">
+                                <i class="fa-solid fa-location-dot absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
+                                <input type="text" placeholder="e.g. Mumbai, India" class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-slate-900 mb-2">2. Where do you want to go?</label>
+                            <div class="relative">
+                                <i class="fa-solid fa-plane-arrival absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
+                                <input type="text" placeholder="e.g. Bali, Indonesia" class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dates -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-bold text-slate-900 mb-2">Departure date</label>
+                            <input type="date" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all text-slate-600">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-slate-900 mb-2">Return date</label>
+                            <input type="date" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all text-slate-600">
+                        </div>
+                    </div>
+
+                    <!-- 3. Travelers -->
+                    <div>
+                        <label class="block text-sm font-bold text-slate-900 mb-3">3. Number of travelers</label>
+                        <div class="flex flex-wrap gap-3" id="traveler-options">
+                            <button class="traveler-btn active px-4 py-2 border-2 border-primary-600 bg-primary-50 text-primary-700 font-medium rounded-xl text-sm transition-all">Solo</button>
+                            <button class="traveler-btn px-4 py-2 border-2 border-slate-100 bg-white hover:border-slate-200 text-slate-600 font-medium rounded-xl text-sm transition-all">Couple / 2</button>
+                            <button class="traveler-btn px-4 py-2 border-2 border-slate-100 bg-white hover:border-slate-200 text-slate-600 font-medium rounded-xl text-sm transition-all">Friends / Family (3-5)</button>
+                            <button class="traveler-btn px-4 py-2 border-2 border-slate-100 bg-white hover:border-slate-200 text-slate-600 font-medium rounded-xl text-sm transition-all">Group (6+)</button>
+                        </div>
+                    </div>
+
+                    <!-- 4. Budget -->
+                    <div>
+                        <div class="flex justify-between items-end mb-3">
+                            <label class="block text-sm font-bold text-slate-900">4. Total budget (INR)</label>
+                            <span id="budget-display" class="text-xl font-bold text-primary-600">₹50,000</span>
+                        </div>
+                        <input type="range" id="budget-slider" min="5000" max="200000" step="1000" value="50000" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-primary-600">
+                        <div class="flex justify-between text-xs text-slate-400 font-medium mt-2">
+                            <span>₹5K</span>
+                            <span>₹50K</span>
+                            <span>₹1L</span>
+                            <span>₹2L+</span>
+                        </div>
+                        <p class="text-xs text-slate-500 mt-2"><i class="fa-solid fa-circle-info mr-1"></i>Choose the total budget for the trip, not per person.</p>
+                    </div>
+
+                    <!-- 5. Trip Preferences -->
+                    <div>
+                        <label class="block text-sm font-bold text-slate-900 mb-3">5. What kind of trip do you prefer?</label>
+                        <div class="flex flex-wrap gap-3" id="preference-options">
+                            <button class="pref-btn active px-4 py-2 border-2 border-primary-600 bg-primary-50 text-primary-700 font-medium rounded-xl text-sm transition-all">🏔️ Adventure & trekking</button>
+                            <button class="pref-btn active px-4 py-2 border-2 border-primary-600 bg-primary-50 text-primary-700 font-medium rounded-xl text-sm transition-all">🏖️ Relaxation & beaches</button>
+                            <button class="pref-btn px-4 py-2 border-2 border-slate-100 bg-white hover:border-slate-200 text-slate-600 font-medium rounded-xl text-sm transition-all">🏛️ Culture & history</button>
+                            <button class="pref-btn px-4 py-2 border-2 border-slate-100 bg-white hover:border-slate-200 text-slate-600 font-medium rounded-xl text-sm transition-all">🌿 Nature & wildlife</button>
+                            <button class="pref-btn px-4 py-2 border-2 border-slate-100 bg-white hover:border-slate-200 text-slate-600 font-medium rounded-xl text-sm transition-all">🍜 Food & local</button>
+                        </div>
+                    </div>
+
+                    <!-- 6. Additional Preferences -->
+                    <div>
+                        <label class="block text-sm font-bold text-slate-900 mb-2">6. Additional preferences (optional)</label>
+                        <textarea placeholder="e.g. Vegetarian food options, no early morning flights, must visit specific landmark..." class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all min-h-[100px] resize-y"></textarea>
+                    </div>
+
+                    <div class="pt-4 border-t border-slate-100">
+                        <button onclick="generateItinerary()" class="w-full bg-primary-600 hover:bg-primary-700 text-white font-bold text-lg py-4 rounded-xl shadow-lg shadow-primary-500/30 transition-all flex justify-center items-center gap-2">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> Generate AI Itinerary
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Result View -->
+            <div id="view-ai-result" class="view-section space-y-6 max-w-7xl mx-auto pb-10">
+                
+                <!-- 1. Trip Overview & Actions -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+                        <div>
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="bg-primary-100 text-primary-800 text-xs font-bold px-2.5 py-0.5 rounded-full">AI Generated</span>
+                                <span class="text-slate-500 text-sm"><i class="fa-solid fa-location-dot mr-1"></i>Bali, Indonesia</span>
+                            </div>
+                            <h1 class="text-3xl font-bold text-slate-900 mb-2">7 Days in Tropical Bali</h1>
+                            <div class="flex flex-wrap items-center gap-4 text-sm font-medium text-slate-600">
+                                <div class="flex items-center gap-1.5"><i class="fa-regular fa-calendar text-slate-400"></i> Nov 10 - Nov 16, 2026</div>
+                                <div class="w-1 h-1 bg-slate-300 rounded-full hidden sm:block"></div>
+                                <div class="flex items-center gap-1.5"><i class="fa-solid fa-user-group text-slate-400"></i> Couple / 2</div>
+                                <div class="w-1 h-1 bg-slate-300 rounded-full hidden sm:block"></div>
+                                <div class="flex items-center gap-1.5"><i class="fa-solid fa-wallet text-slate-400"></i> Est: ₹48,500</div>
+                            </div>
+                        </div>
+                        
+                        <!-- 8. Actions -->
+                        <div class="flex flex-wrap gap-3 w-full lg:w-auto">
+                            <button class="flex-1 lg:flex-none px-4 py-2 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-medium rounded-lg text-sm transition-colors shadow-sm flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-pen"></i> Edit
+                            </button>
+                            <button class="flex-1 lg:flex-none px-4 py-2 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-medium rounded-lg text-sm transition-colors shadow-sm flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-rotate-right"></i> Regenerate
+                            </button>
+                            <button class="flex-1 lg:flex-none px-4 py-2 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-medium rounded-lg text-sm transition-colors shadow-sm flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-file-pdf text-red-500"></i> PDF
+                            </button>
+                            <button class="flex-1 lg:flex-none px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg text-sm transition-colors shadow-sm flex items-center justify-center gap-2">
+                                <i class="fa-regular fa-bookmark"></i> Save Trip
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                    
+                    <!-- Left Column (Main Itinerary & Details) -->
+                    <div class="xl:col-span-2 space-y-6">
+                        
+                        <!-- 2. Day-wise Itinerary -->
+                        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                            <div class="p-5 border-b border-slate-200 bg-slate-50">
+                                <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                                    <i class="fa-regular fa-map"></i> Day-wise Itinerary
+                                </h2>
+                            </div>
+                            
+                            <div class="p-6 space-y-8">
+                                <!-- Day 1 -->
+                                <div class="relative pl-8 border-l-2 border-primary-200">
+                                    <div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-primary-500 ring-4 ring-white"></div>
+                                    <h3 class="font-bold text-slate-900 text-lg mb-1">Day 1: Arrival & Sunset Vibes</h3>
+                                    <p class="text-xs font-semibold text-slate-500 mb-4 uppercase tracking-wider">Uluwatu</p>
+                                    
+                                    <div class="space-y-4">
+                                        <div class="flex flex-col sm:flex-row gap-2 sm:gap-4">
+                                            <div class="sm:w-16 shrink-0 sm:text-right text-sm font-semibold text-slate-500 sm:pt-1">Afternoon</div>
+                                            <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 flex-1">
+                                                <h4 class="font-bold text-slate-800 text-sm mb-1">Check-in & Relax</h4>
+                                                <p class="text-sm text-slate-600">Arrive at Ngurah Rai Airport, transfer to your Cliffside resort in Uluwatu.</p>
+                                            </div>
+                                        </div>
+                                        <div class="flex flex-col sm:flex-row gap-2 sm:gap-4">
+                                            <div class="sm:w-16 shrink-0 sm:text-right text-sm font-semibold text-slate-500 sm:pt-1">Evening</div>
+                                            <div class="bg-primary-50 p-3 rounded-xl border border-primary-100 flex-1">
+                                                <h4 class="font-bold text-primary-900 text-sm mb-1">Uluwatu Temple Sunset</h4>
+                                                <p class="text-sm text-primary-700">Watch the traditional Kecak fire dance overlooking the ocean at sunset.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Day 2 -->
+                                <div class="relative pl-8 border-l-2 border-primary-200">
+                                    <div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-primary-500 ring-4 ring-white"></div>
+                                    <h3 class="font-bold text-slate-900 text-lg mb-1">Day 2: Beach Hopping & Surfing</h3>
+                                    <p class="text-xs font-semibold text-slate-500 mb-4 uppercase tracking-wider">Uluwatu / Canggu</p>
+                                    
+                                    <div class="space-y-4">
+                                        <div class="flex flex-col sm:flex-row gap-2 sm:gap-4">
+                                            <div class="sm:w-16 shrink-0 sm:text-right text-sm font-semibold text-slate-500 sm:pt-1">Morning</div>
+                                            <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 flex-1">
+                                                <h4 class="font-bold text-slate-800 text-sm mb-1">Padang Padang Beach</h4>
+                                                <p class="text-sm text-slate-600">Early morning swim and optional beginner surf lesson.</p>
+                                            </div>
+                                        </div>
+                                        <div class="flex flex-col sm:flex-row gap-2 sm:gap-4">
+                                            <div class="sm:w-16 shrink-0 sm:text-right text-sm font-semibold text-slate-500 sm:pt-1">Afternoon</div>
+                                            <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 flex-1">
+                                                <h4 class="font-bold text-slate-800 text-sm mb-1">Transfer to Canggu</h4>
+                                                <p class="text-sm text-slate-600">Move to Canggu, grab lunch at a local warung, and explore the boutique shops.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <button class="w-full py-3 border-2 border-dashed border-slate-200 rounded-xl text-slate-500 font-medium hover:border-slate-300 hover:bg-slate-50 transition-colors">
+                                    View Full 7-Day Itinerary <i class="fa-solid fa-chevron-down ml-1"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 3. Route Map & 4. Budget Breakdown Grid -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            
+                            <!-- 3. Route Map -->
+                            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 flex flex-col">
+                                <h2 class="text-lg font-bold text-slate-900 mb-4">Route Map</h2>
+                                <div class="bg-slate-100 rounded-xl flex-1 relative overflow-hidden min-h-[250px] border border-slate-200 flex items-center justify-center">
+                                    <!-- Placeholder Map Visual -->
+                                    <img src="https://images.unsplash.com/photo-1524661135-423995f22d0b?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80" alt="Map" class="absolute inset-0 w-full h-full object-cover opacity-60">
+                                    <div class="absolute inset-0 bg-blue-900/10"></div>
+                                    
+                                    <!-- Route points overlay -->
+                                    <div class="relative z-10 w-full px-8 py-4">
+                                        <div class="flex items-center justify-between mb-8">
+                                            <div class="flex flex-col items-center">
+                                                <div class="w-4 h-4 bg-primary-600 rounded-full shadow-[0_0_0_4px_white]"></div>
+                                                <span class="text-xs font-bold bg-white/90 px-2 py-1 rounded shadow-sm mt-2">Uluwatu</span>
+                                            </div>
+                                            <div class="flex-1 border-t-2 border-dashed border-slate-800 relative top-[-10px]">
+                                                <i class="fa-solid fa-car absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-slate-800 bg-white rounded-full p-1 text-xs"></i>
+                                            </div>
+                                            <div class="flex flex-col items-center">
+                                                <div class="w-4 h-4 bg-primary-600 rounded-full shadow-[0_0_0_4px_white]"></div>
+                                                <span class="text-xs font-bold bg-white/90 px-2 py-1 rounded shadow-sm mt-2">Canggu</span>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center justify-end">
+                                             <div class="h-16 border-r-2 border-dashed border-slate-800 relative left-[-20px] top-[-25px]"></div>
+                                        </div>
+                                        <div class="flex justify-end">
+                                            <div class="flex flex-col items-center">
+                                                <div class="w-4 h-4 bg-red-500 rounded-full shadow-[0_0_0_4px_white]"></div>
+                                                <span class="text-xs font-bold bg-white/90 px-2 py-1 rounded shadow-sm mt-2">Ubud</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 4. Budget Breakdown -->
+                            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+                                <h2 class="text-lg font-bold text-slate-900 mb-4">Budget Estimate</h2>
+                                
+                                <div class="space-y-4">
+                                    <div>
+                                        <div class="flex justify-between text-sm mb-1">
+                                            <span class="text-slate-600"><i class="fa-solid fa-plane w-5"></i> Flights/Transport</span>
+                                            <span class="font-bold text-slate-900">₹18,000</span>
+                                        </div>
+                                        <div class="w-full bg-slate-100 rounded-full h-2.5">
+                                            <div class="bg-blue-500 h-2.5 rounded-full" style="width: 37%"></div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="flex justify-between text-sm mb-1">
+                                            <span class="text-slate-600"><i class="fa-solid fa-bed w-5"></i> Accommodation</span>
+                                            <span class="font-bold text-slate-900">₹15,000</span>
+                                        </div>
+                                        <div class="w-full bg-slate-100 rounded-full h-2.5">
+                                            <div class="bg-indigo-500 h-2.5 rounded-full" style="width: 31%"></div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="flex justify-between text-sm mb-1">
+                                            <span class="text-slate-600"><i class="fa-solid fa-utensils w-5"></i> Food & Dining</span>
+                                            <span class="font-bold text-slate-900">₹10,500</span>
+                                        </div>
+                                        <div class="w-full bg-slate-100 rounded-full h-2.5">
+                                            <div class="bg-amber-500 h-2.5 rounded-full" style="width: 21%"></div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="flex justify-between text-sm mb-1">
+                                            <span class="text-slate-600"><i class="fa-solid fa-ticket w-5"></i> Activities</span>
+                                            <span class="font-bold text-slate-900">₹5,000</span>
+                                        </div>
+                                        <div class="w-full bg-slate-100 rounded-full h-2.5">
+                                            <div class="bg-emerald-500 h-2.5 rounded-full" style="width: 10%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-6 pt-4 border-t border-slate-100 flex justify-between items-center">
+                                    <span class="text-slate-500 text-sm font-medium">Total Estimate</span>
+                                    <span class="text-xl font-bold text-primary-600">₹48,500</span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Right Column (Tools & Copilot) -->
+                    <div class="space-y-6">
+                        
+                        <!-- 5. Destination Weather -->
+                        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 flex items-center justify-between">
+                            <div>
+                                <h3 class="text-sm font-bold text-slate-900">Bali Weather <span class="text-xs font-normal text-slate-500">(Nov)</span></h3>
+                                <div class="flex items-center gap-2 mt-1">
+                                    <i class="fa-solid fa-sun text-amber-500 text-2xl"></i>
+                                    <div>
+                                        <div class="font-bold text-lg leading-tight">28°C</div>
+                                        <div class="text-xs text-slate-500">Sunny, Humid</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-xs text-slate-500 mb-1">Pack light!</div>
+                                <i class="fa-solid fa-shirt text-slate-300 text-xl"></i>
+                            </div>
+                        </div>
+
+                        <!-- 6. Currency Exchange -->
+                        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+                            <h3 class="text-sm font-bold text-slate-900 mb-3">Currency Exchange</h3>
+                            <div class="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-100">
+                                <div class="flex items-center gap-2">
+                                    <img src="https://flagcdn.com/w20/in.png" alt="INR" class="w-5 h-auto rounded-sm border border-slate-200">
+                                    <span class="font-bold text-slate-700">1 INR</span>
+                                </div>
+                                <i class="fa-solid fa-arrow-right-arrow-left text-slate-400 text-xs"></i>
+                                <div class="flex items-center gap-2">
+                                    <span class="font-bold text-slate-700">188.5 IDR</span>
+                                    <img src="https://flagcdn.com/w20/id.png" alt="IDR" class="w-5 h-auto rounded-sm border border-slate-200">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 7. AI Travel Copilot -->
+                        <div class="bg-white rounded-2xl border border-primary-200 shadow-md overflow-hidden flex flex-col h-[400px]">
+                            <div class="bg-gradient-to-r from-primary-600 to-primary-700 p-4 text-white flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+                                    <i class="fa-solid fa-robot text-sm"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-sm">AI Travel Copilot</h3>
+                                    <p class="text-xs text-blue-100">Adjust & refine your itinerary</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Chat Area -->
+                            <div class="flex-1 p-4 bg-slate-50 overflow-y-auto space-y-4 no-scrollbar">
+                                <div class="flex gap-2">
+                                    <div class="w-6 h-6 rounded-full bg-primary-100 flex items-center justify-center shrink-0 text-primary-600 mt-1">
+                                        <i class="fa-solid fa-robot text-[10px]"></i>
+                                    </div>
+                                    <div class="bg-white border border-slate-200 rounded-xl rounded-tl-none p-3 shadow-sm text-sm text-slate-700">
+                                        I've generated your Bali trip based on your preferences! What would you like to tweak?
+                                    </div>
+                                </div>
+                                
+                                <!-- Suggested Prompts -->
+                                <div class="flex flex-col gap-2 pl-8">
+                                    <button class="text-left px-3 py-2 bg-white border border-primary-100 text-primary-700 rounded-lg text-xs font-medium hover:bg-primary-50 transition-colors">
+                                        "Can we reduce the budget by ₹5k?"
+                                    </button>
+                                    <button class="text-left px-3 py-2 bg-white border border-primary-100 text-primary-700 rounded-lg text-xs font-medium hover:bg-primary-50 transition-colors">
+                                        "Add one more city to visit"
+                                    </button>
+                                    <button class="text-left px-3 py-2 bg-white border border-primary-100 text-primary-700 rounded-lg text-xs font-medium hover:bg-primary-50 transition-colors">
+                                        "Replace the Uluwatu hotel"
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Input Area -->
+                            <div class="p-3 bg-white border-t border-slate-200">
+                                <div class="relative flex items-center">
+                                    <input type="text" placeholder="Type a command..." class="w-full pl-4 pr-10 py-2.5 bg-slate-100 border-transparent rounded-full text-sm focus:bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all">
+                                    <button class="absolute right-2 w-8 h-8 flex items-center justify-center rounded-full bg-primary-600 text-white hover:bg-primary-700 transition-colors">
+                                        <i class="fa-solid fa-paper-plane text-xs"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        // Function to handle switching between views
+        function switchView(viewName) {
+            // Hide all views
+            const views = document.querySelectorAll('.view-section');
+            views.forEach(view => {
+                view.classList.remove('active');
+            });
+
+            // Show selected view
+            const selectedView = document.getElementById(`view-${viewName}`);
+            if (selectedView) {
+                selectedView.classList.add('active');
+            }
+
+            // Update navigation button styles (only for main sidebar links)
+            const navButtons = document.querySelectorAll('.nav-btn');
+            navButtons.forEach(btn => {
+                // Reset styles
+                btn.classList.remove('bg-primary-50', 'text-primary-700');
+                btn.classList.add('text-slate-600', 'hover:bg-slate-50', 'hover:text-slate-900');
+            });
+
+            // Apply active styles to clicked button (if it exists in sidebar)
+            const activeBtn = document.getElementById(`nav-${viewName}`);
+            if (activeBtn) {
+                activeBtn.classList.remove('text-slate-600', 'hover:bg-slate-50', 'hover:text-slate-900');
+                activeBtn.classList.add('bg-primary-50', 'text-primary-700');
+            }
+
+            // Scroll top
+            const scrollContainer = document.querySelector('.overflow-y-auto');
+            if(scrollContainer) scrollContainer.scrollTop = 0;
+
+            // On mobile, close sidebar after clicking a link
+            if (window.innerWidth < 768) {
+                closeSidebar();
+            }
+        }
+
+        // Functions for handling mobile sidebar toggle
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobile-overlay');
+            
+            if (sidebar.classList.contains('-translate-x-full')) {
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+            } else {
+                closeSidebar();
+            }
+        }
+
+        function closeSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobile-overlay');
+            
+            sidebar.classList.add('-translate-x-full');
+            overlay.classList.add('hidden');
+        }
+
+        // Form initialization and interaction logic
+        function initNewTripForm() {
+            // Budget Slider formatting
+            const budgetSlider = document.getElementById('budget-slider');
+            const budgetDisplay = document.getElementById('budget-display');
+            if (budgetSlider && budgetDisplay) {
+                budgetSlider.addEventListener('input', (e) => {
+                    const value = Number(e.target.value);
+                    budgetDisplay.innerText = `₹${value.toLocaleString('en-IN')}`;
+                });
+            }
+
+            // Traveler Selection (Single select)
+            const travelerBtns = document.querySelectorAll('.traveler-btn');
+            travelerBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    travelerBtns.forEach(b => {
+                        b.classList.remove('active', 'border-primary-600', 'bg-primary-50', 'text-primary-700');
+                        b.classList.add('border-slate-100', 'bg-white', 'text-slate-600');
+                    });
+                    e.target.classList.remove('border-slate-100', 'bg-white', 'text-slate-600');
+                    e.target.classList.add('active', 'border-primary-600', 'bg-primary-50', 'text-primary-700');
+                });
+            });
+
+            // Preference Selection (Multi select)
+            const prefBtns = document.querySelectorAll('.pref-btn');
+            prefBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const target = e.target;
+                    if (target.classList.contains('active')) {
+                        target.classList.remove('active', 'border-primary-600', 'bg-primary-50', 'text-primary-700');
+                        target.classList.add('border-slate-100', 'bg-white', 'text-slate-600');
+                    } else {
+                        target.classList.remove('border-slate-100', 'bg-white', 'text-slate-600');
+                        target.classList.add('active', 'border-primary-600', 'bg-primary-50', 'text-primary-700');
+                    }
+                });
+            });
+        }
+
+        // Fake AI Generation Loading State
+        function generateItinerary() {
+            const loadingOverlay = document.getElementById('ai-loading-overlay');
+            if(loadingOverlay) {
+                loadingOverlay.classList.remove('hidden');
+                loadingOverlay.classList.add('flex');
+                
+                // Simulate AI processing delay (2.5 seconds)
+                setTimeout(() => {
+                    loadingOverlay.classList.remove('flex');
+                    loadingOverlay.classList.add('hidden');
+                    switchView('ai-result'); // Switch to results view
+                }, 2500);
+            }
+        }
+
+        // Data and rendering for Discover Destinations View
+        const allCountries = "Afghanistan,Albania,Algeria,Andorra,Angola,Antigua and Barbuda,Argentina,Armenia,Australia,Austria,Azerbaijan,Bahamas,Bahrain,Bangladesh,Barbados,Belarus,Belgium,Belize,Benin,Bhutan,Bolivia,Bosnia and Herzegovina,Botswana,Brazil,Brunei,Bulgaria,Burkina Faso,Burundi,Cabo Verde,Cambodia,Cameroon,Canada,Central African Republic,Chad,Chile,China,Colombia,Comoros,Congo,Costa Rica,Croatia,Cuba,Cyprus,Czechia,Democratic Republic of the Congo,Denmark,Djibouti,Dominica,Dominican Republic,Ecuador,Egypt,El Salvador,Equatorial Guinea,Eritrea,Estonia,Eswatini,Ethiopia,Fiji,Finland,France,Gabon,Gambia,Georgia,Germany,Ghana,Greece,Grenada,Guatemala,Guinea,Guinea-Bissau,Guyana,Haiti,Honduras,Hungary,Iceland,India,Indonesia,Iran,Iraq,Ireland,Israel,Italy,Jamaica,Japan,Jordan,Kazakhstan,Kenya,Kiribati,Kuwait,Kyrgyzstan,Laos,Latvia,Lebanon,Lesotho,Liberia,Libya,Liechtenstein,Lithuania,Luxembourg,Madagascar,Malawi,Malaysia,Maldives,Mali,Malta,Marshall Islands,Mauritania,Mauritius,Mexico,Micronesia,Moldova,Monaco,Mongolia,Montenegro,Morocco,Mozambique,Myanmar,Namibia,Nauru,Nepal,Netherlands,New Zealand,Nicaragua,Niger,Nigeria,North Korea,North Macedonia,Norway,Oman,Pakistan,Palau,Palestine State,Panama,Papua New Guinea,Paraguay,Peru,Philippines,Poland,Portugal,Qatar,Romania,Russia,Rwanda,Saint Kitts and Nevis,Saint Lucia,Saint Vincent and the Grenadines,Samoa,San Marino,Sao Tome and Principe,Saudi Arabia,Senegal,Serbia,Seychelles,Sierra Leone,Singapore,Slovakia,Slovenia,Solomon Islands,Somalia,South Africa,South Korea,South Sudan,Spain,Sri Lanka,Sudan,Suriname,Sweden,Switzerland,Syria,Tajikistan,Tanzania,Thailand,Timor-Leste,Togo,Tonga,Trinidad and Tobago,Tunisia,Turkey,Turkmenistan,Tuvalu,Uganda,Ukraine,United Arab Emirates,United Kingdom,United States of America,Uruguay,Uzbekistan,Vanuatu,Venezuela,Vietnam,Yemen,Zambia,Zimbabwe".split(',');
+
+        // Curated specific images for popular destinations; dynamic placeholders will be generated for others
+        const curatedImages = {
+            "Japan": "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+            "Greece": "https://images.unsplash.com/photo-1613395877344-13d4a8e0d49e?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+            "Canada": "https://images.unsplash.com/photo-1605640840428-dc1e1c51d6db?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+            "United Arab Emirates": "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+            "France": "https://images.unsplash.com/photo-1499856871958-5b9627545d1a?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+            "Italy": "https://images.unsplash.com/photo-1516483638261-f408892288c6?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+            "United States of America": "https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+            "India": "https://images.unsplash.com/photo-1524492412937-b28074a5d7da?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+            "Australia": "https://images.unsplash.com/photo-1523482580672-f109ba8cb9be?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+            "Brazil": "https://images.unsplash.com/photo-1483729558449-99ef09a8c325?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+            "Egypt": "https://images.unsplash.com/photo-1539650116574-8efeb43e2750?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+            "Mexico": "https://images.unsplash.com/photo-1518105779142-d975f22f1b0a?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+            "Thailand": "https://images.unsplash.com/photo-1552465011-b4e21bf6e79a?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+            "Spain": "https://images.unsplash.com/photo-1543783207-ec64e4d95325?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+            "United Kingdom": "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+            "South Africa": "https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+            "China": "https://images.unsplash.com/photo-1508804185872-d7badad00f7d?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+            "Switzerland": "https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+            "Maldives": "https://images.unsplash.com/photo-1514282401047-d79a71a590e8?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
+        };
+
+        function renderDestinations(searchTerm = '') {
+            const grid = document.getElementById('destinations-grid');
+            if (!grid) return;
+            
+            grid.innerHTML = ''; // Clear previous
+            
+            const filteredCountries = allCountries.filter(c => c.toLowerCase().includes(searchTerm.toLowerCase()));
+
+            filteredCountries.forEach((country) => {
+                // Determine image to use
+                const imageUrl = curatedImages[country] || `https://placehold.co/800x600/f1f5f9/475569?text=${encodeURIComponent(country)}`;
+                
+                // Deterministic pseudo-random rating based on string length to remain consistent per country
+                const rating = (4.0 + (country.length % 10) / 10).toFixed(1);
+                
+                const card = `
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden group cursor-pointer hover:shadow-md transition-shadow">
+                        <div class="h-48 overflow-hidden relative bg-slate-100">
+                            <img src="${imageUrl}" 
+                                 alt="${country}" 
+                                 loading="lazy"
+                                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                            <button class="absolute top-3 right-3 w-8 h-8 bg-white/80 backdrop-blur rounded-full flex items-center justify-center text-slate-400 hover:text-red-500 transition-colors">
+                                <i class="fa-regular fa-heart"></i>
+                            </button>
+                        </div>
+                        <div class="p-5">
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="text-lg font-bold text-slate-900 line-clamp-1">${country}</h3>
+                                <div class="flex items-center gap-1 text-sm font-medium text-amber-500 shrink-0">
+                                    <i class="fa-solid fa-star text-xs"></i> ${rating}
+                                </div>
+                            </div>
+                            <p class="text-slate-500 text-sm mb-4 line-clamp-2">Explore the beautiful landscapes, rich culture, and amazing experiences that ${country} has to offer.</p>
+                            <div class="flex flex-wrap gap-2">
+                                <span class="px-2 py-1 bg-slate-50 text-slate-600 text-xs rounded-md border border-slate-200">Travel</span>
+                                <span class="px-2 py-1 bg-slate-50 text-slate-600 text-xs rounded-md border border-slate-200">Explore</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                grid.insertAdjacentHTML('beforeend', card);
+            });
+
+            const countDisplay = document.getElementById('destinations-count');
+            if (countDisplay) {
+                countDisplay.innerText = `Showing ${filteredCountries.length} countries`;
+            }
+        }
+
+        // Calendar logic for Dashboard
+        function renderCalendar() {
+            const calendarGrid = document.getElementById('calendar-grid');
+            const monthYearText = document.getElementById('month-year-text');
+            if (!calendarGrid) return;
+            
+            const date = new Date(); 
+            const currentMonth = date.getMonth();
+            const currentYear = date.getFullYear();
+            const today = date.getDate();
+            
+            const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+            
+            const monthNames = ["January", "February", "March", "April", "May", "June",
+              "July", "August", "September", "October", "November", "December"
+            ];
+            
+            if (monthYearText) {
+                monthYearText.textContent = `${monthNames[currentMonth]} ${currentYear}`;
+            }
+            
+            let html = '';
+            const days = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+            days.forEach(day => {
+                html += `<div class="text-xs font-semibold text-slate-400 pb-2">${day}</div>`;
+            });
+            
+            for (let i = 0; i < firstDay; i++) {
+                html += `<div></div>`;
+            }
+            
+            for (let i = 1; i <= daysInMonth; i++) {
+                let classes = "w-8 h-8 flex items-center justify-center rounded-full mx-auto text-sm transition-colors cursor-pointer ";
+                
+                // Highlight logic: 'today' and hardcoded upcoming trip dates (Oct 24-30 2026)
+                if (i === today) {
+                    classes += "bg-primary-600 text-white font-bold shadow-sm hover:bg-primary-700";
+                } else if ((currentMonth === 9 && currentYear === 2026) && (i >= 24 && i <= 30)) { 
+                    classes += "bg-primary-100 text-primary-800 font-semibold border border-primary-200 hover:bg-primary-200";
+                } else {
+                    classes += "text-slate-700 hover:bg-slate-100";
+                }
+                
+                html += `<div><div class="${classes}">${i}</div></div>`;
+            }
+            
+            calendarGrid.innerHTML = html;
+        }
+
+        // Live Weather Widget logic for Dashboard
+        async function renderWeather() {
+            const weatherContent = document.getElementById('weather-content');
+            if (!weatherContent) return;
+            
+            weatherContent.innerHTML = `
+                <div class="flex items-center gap-4 mb-6">
+                    <i class="fa-solid fa-circle-notch fa-spin text-3xl"></i>
+                    <span class="text-sm">Fetching live weather...</span>
+                </div>
+            `;
+
+            try {
+                // Fetch real weather data for Paris from Open-Meteo (No API key needed)
+                const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=48.8566&longitude=2.3522&current_weather=true&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=auto');
+                const data = await res.json();
+                
+                const currentTemp = Math.round(data.current_weather.temperature);
+                const code = data.current_weather.weathercode;
+                
+                // Simplified WMO Weather interpretation
+                let icon = 'fa-sun';
+                let desc = 'Clear Sky';
+                if (code >= 1 && code <= 3) { icon = 'fa-cloud-sun'; desc = 'Partly Cloudy'; }
+                if (code >= 45 && code <= 48) { icon = 'fa-smog'; desc = 'Foggy'; }
+                if (code >= 51 && code <= 67) { icon = 'fa-cloud-rain'; desc = 'Rain'; }
+                if (code >= 71 && code <= 82) { icon = 'fa-snowflake'; desc = 'Snow'; }
+                if (code >= 95) { icon = 'fa-cloud-bolt'; desc = 'Thunderstorm'; }
+
+                // Build tomorrow and day after small forecasts
+                const maxT1 = Math.round(data.daily.temperature_2m_max[1]);
+                const maxT2 = Math.round(data.daily.temperature_2m_max[2]);
+                
+                const date1 = new Date(data.daily.time[1]).toLocaleDateString('en-US', { weekday: 'short' });
+                const date2 = new Date(data.daily.time[2]).toLocaleDateString('en-US', { weekday: 'short' });
+
+                weatherContent.innerHTML = `
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="flex items-center gap-4">
+                            <i class="fa-solid ${icon} text-5xl drop-shadow-md"></i>
+                            <div>
+                                <div class="text-4xl font-bold tracking-tighter">${currentTemp}°C</div>
+                                <div class="text-blue-100 font-medium">${desc}</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-2 border-t border-white/20 pt-3">
+                        <div class="text-center">
+                            <p class="text-xs text-blue-100 mb-1">${date1}</p>
+                            <p class="text-sm font-bold">${maxT1}°C</p>
+                        </div>
+                        <div class="text-center border-l border-white/20">
+                            <p class="text-xs text-blue-100 mb-1">${date2}</p>
+                            <p class="text-sm font-bold">${maxT2}°C</p>
+                        </div>
+                    </div>
+                `;
+            } catch (e) {
+                console.error('Weather fetch failed', e);
+                // Graceful fallback if API fails
+                weatherContent.innerHTML = `
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="flex items-center gap-4">
+                            <i class="fa-solid fa-cloud-sun text-5xl drop-shadow-md"></i>
+                            <div>
+                                <div class="text-4xl font-bold tracking-tighter">18°C</div>
+                                <div class="text-blue-100 font-medium">Partly Cloudy</div>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-xs text-blue-200 mt-2 text-center bg-white/10 py-1 rounded">Offline Mode</p>
+                `;
+            }
+        }
+
+        // Initialize UI components on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            renderDestinations();
+            renderCalendar();
+            renderWeather();
+            initNewTripForm();
+
+            // Setup search listener for destinations
+            const searchInput = document.getElementById('country-search');
+            if (searchInput) {
+                searchInput.addEventListener('input', (e) => {
+                    renderDestinations(e.target.value);
+                });
+            }
+        });
+
+        // Handle window resize events to maintain UI integrity
+        window.addEventListener('resize', () => {
+            if (window.innerWidth >= 768) {
+                // Ensure sidebar is visible on desktop and overlay is hidden
+                const sidebar = document.getElementById('sidebar');
+                const overlay = document.getElementById('mobile-overlay');
+                
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.add('hidden');
+            } else {
+                // Ensure sidebar is hidden by default when resizing down to mobile
+                closeSidebar();
+            }
+        });
+    </script>
+</body>
+</html>
