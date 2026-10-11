@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trip Craft | Crafting Your Dream Journeys</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                    },
+                    colors: {
+                        brand: {
+                            light: '#f3f4f6',
+                            DEFAULT: '#d4af37', // Gold accent
+                            dark: '#1f2937',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Base styles */
+        body {
+            background-color: #000;
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        /* Fullscreen Background Slideshow */
+        .bg-slide {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: 0;
+            z-index: -2;
+            transition: opacity 2s ease-in-out, transform 12s linear;
+            transform: scale(1);
+        }
+
+        .bg-slide.active {
+            opacity: 1;
+            transform: scale(1.05); /* Slow zoom effect */
+        }
+
+        /* Overlay to ensure text readability */
+        .bg-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.6) 100%);
+            z-index: -1;
+        }
+
+        /* Glassmorphism utilities */
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .glass-card {
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.4s ease;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-10px);
+            border-color: rgba(212, 175, 55, 0.4); /* Gold subtle border on hover */
+        }
+
+        /* Hide scrollbar for carousel */
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #111; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #555; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #d4af37; 
+        }
+    </style>
+</head>
+<body class="antialiased font-sans flex flex-col min-h-screen">
+
+    <!-- Background Slides (Images of Maldives, Alps, Paris, etc.) -->
+    <div id="slide-1" class="bg-slide active" style="background-image: url('https://images.unsplash.com/photo-1514282401047-d79a71a590e8?q=80&w=2000&auto=format&fit=crop');"></div>
+    <div id="slide-2" class="bg-slide" style="background-image: url('https://images.unsplash.com/photo-1499856871958-5b9627545d1a?q=80&w=2000&auto=format&fit=crop');"></div>
+    <div id="slide-3" class="bg-slide" style="background-image: url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=2000&auto=format&fit=crop');"></div>
+    <div id="slide-4" class="bg-slide" style="background-image: url('https://images.unsplash.com/photo-1544644181-1484b3fdfc62?q=80&w=2000&auto=format&fit=crop');"></div>
+    
+    <!-- Gradient Overlay -->
+    <div class="bg-overlay"></div>
+
+    <!-- Navigation -->
+    <header id="navbar" class="absolute top-0 w-full z-50 transition-all duration-300 border-b border-transparent">
+        <div class="max-w-7xl mx-auto px-6 lg:px-8">
+            <div class="flex items-center justify-between h-24">
+                <!-- Logo -->
+                <div class="flex-shrink-0 cursor-pointer nav-brand opacity-0">
+                    <a href="#" class="font-serif text-2xl tracking-wider text-white font-semibold uppercase flex items-center gap-2">
+                        <i class="fa-solid fa-compass text-brand"></i>
+                        Trip <span class="text-brand font-light">Craft</span>
+                    </a>
+                </div>
+                <!-- Desktop Menu -->
+                <nav class="hidden md:block nav-links opacity-0">
+                    <ul class="flex space-x-10 text-sm font-medium tracking-wide uppercase text-white/80">
+                        <li><a href="#destinations" class="hover:text-brand transition-colors duration-300">Destinations</a></li>
+                        <li><a href="#experiences" class="hover:text-brand transition-colors duration-300">Experiences</a></li>
+                        <li><a href="#process" class="hover:text-brand transition-colors duration-300">Approach</a></li>
+                        <li><a href="#testimonials" class="hover:text-brand transition-colors duration-300">Journals</a></li>
+                        <li><a href="#contact" class="hover:text-brand transition-colors duration-300">Contact</a></li>
+                    </ul>
+                </nav>
+                <!-- CTA Buttons -->
+                <div class="hidden md:flex items-center gap-3 nav-cta opacity-0">
+                    <a href="#login" class="text-xs font-medium uppercase tracking-widest text-white/80 hover:text-white transition-all duration-300 border border-transparent hover:border-white/50 px-4 py-2 rounded-full">
+                        Log In
+                    </a>
+                    <a href="#signup" class="text-xs font-medium uppercase tracking-widest text-white/80 hover:text-white transition-all duration-300 border border-white/30 px-4 py-2 rounded-full hover:border-white">
+                        Sign Up
+                    </a>
+                    <a href="#contact" class="glass px-5 py-2.5 rounded-full text-xs font-medium uppercase tracking-widest hover:bg-white hover:text-black transition-all duration-300 ml-1">
+                        Plan Your Trip
+                    </a>
+                </div>
+                <!-- Mobile menu button -->
+                <div class="md:hidden flex items-center opacity-0 nav-brand">
+                    <button class="text-white hover:text-brand focus:outline-none">
+                        <i class="fa-solid fa-bars text-2xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <main class="relative z-10 flex flex-col justify-center min-h-screen px-6 lg:px-8 max-w-7xl mx-auto w-full pt-20">
+        <div class="max-w-3xl hero-content">
+            <div class="hero-eyebrow opacity-0 flex items-center gap-4 mb-6">
+                <div class="w-12 h-[1px] bg-brand"></div>
+                <span class="uppercase tracking-[0.3em] text-xs font-semibold text-brand">Bespoke Travel Planners</span>
+            </div>
+            
+            <h1 class="hero-title opacity-0 text-5xl md:text-7xl lg:text-8xl font-serif font-medium leading-tight mb-6">
+                Curating <br>
+                <span class="italic font-light text-white/90">extraordinary</span> <br>
+                journeys.
+            </h1>
+            
+            <p class="hero-subtitle opacity-0 text-lg md:text-xl text-white/70 font-light max-w-xl mb-10 leading-relaxed">
+                Experience the world's most breathtaking destinations—from the azure waters of the Maldives to the snow-capped Swiss Alps—crafted exactly to your desires.
+            </p>
+            
+            <div class="hero-buttons opacity-0 flex flex-wrap items-center gap-6">
+                <a href="#experiences" class="bg-brand text-black px-8 py-4 rounded-full font-medium tracking-wide hover:bg-white hover:scale-105 transition-all duration-300 shadow-[0_0_20px_rgba(212,175,55,0.3)]">
+                    Discover Destinations
+                </a>
+                <a href="#video" class="flex items-center gap-3 text-white/80 hover:text-white group transition-colors duration-300">
+                    <div class="w-12 h-12 rounded-full border border-white/30 flex items-center justify-center group-hover:border-white transition-colors duration-300 glass">
+                        <i class="fa-solid fa-play text-xs pl-1"></i>
+                    </div>
+                    <span class="uppercase text-xs tracking-widest font-medium">Watch Film</span>
+                </a>
+            </div>
+        </div>
+        
+        <!-- Scroll indicator -->
+        <div class="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 scroll-indicator opacity-0">
+            <span class="text-[10px] uppercase tracking-[0.2em] text-white/50">Scroll</span>
+            <div class="w-[1px] h-12 bg-white/20 relative overflow-hidden">
+                <div class="w-full h-1/2 bg-brand absolute top-0 left-0 animate-[scrollDown_2s_ease-in-out_infinite]"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Experiences Section -->
+    <section id="experiences" class="relative z-10 py-32 px-6 lg:px-8 w-full">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-20 section-header opacity-0">
+                <h2 class="font-serif text-4xl md:text-5xl mb-4">The Trip Craft Standard</h2>
+                <p class="text-white/60 max-w-2xl mx-auto font-light">We don't just book trips; we architect unforgettable experiences tailored to your unique rhythm and style.</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Feature 1 -->
+                <div class="glass-card p-10 rounded-2xl feature-card opacity-0 translate-y-10">
+                    <div class="w-14 h-14 rounded-full bg-brand/10 flex items-center justify-center mb-6 border border-brand/20 text-brand">
+                        <i class="fa-solid fa-map-location-dot text-xl"></i>
+                    </div>
+                    <h3 class="text-xl font-serif mb-3">Tailored Itineraries</h3>
+                    <p class="text-white/60 text-sm leading-relaxed font-light">
+                        Every journey is designed from scratch. We listen to your desires and craft a seamless route that maximizes your time and wonder.
+                    </p>
+                </div>
+                
+                <!-- Feature 2 -->
+                <div class="glass-card p-10 rounded-2xl feature-card opacity-0 translate-y-10">
+                    <div class="w-14 h-14 rounded-full bg-brand/10 flex items-center justify-center mb-6 border border-brand/20 text-brand">
+                        <i class="fa-solid fa-champagne-glasses text-xl"></i>
+                    </div>
+                    <h3 class="text-xl font-serif mb-3">Exclusive Access</h3>
+                    <p class="text-white/60 text-sm leading-relaxed font-light">
+                        Leverage our global network for VIP perks, private tours, unlisted villas, and reservations at fully booked Michelin-star restaurants.
+                    </p>
+                </div>
+                
+                <!-- Feature 3 -->
+                <div class="glass-card p-10 rounded-2xl feature-card opacity-0 translate-y-10">
+                    <div class="w-14 h-14 rounded-full bg-brand/10 flex items-center justify-center mb-6 border border-brand/20 text-brand">
+                        <i class="fa-solid fa-headset text-xl"></i>
+                    </div>
+                    <h3 class="text-xl font-serif mb-3">24/7 Concierge</h3>
+                    <p class="text-white/60 text-sm leading-relaxed font-light">
+                        Travel with absolute peace of mind. Our dedicated team is available around the clock to handle any changes or spontaneous requests.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Destinations Section -->
+    <section id="destinations" class="relative z-10 py-32 px-6 lg:px-8 w-full">
+        <div class="max-w-7xl mx-auto relative">
+            <div class="text-center mb-16 section-header opacity-0">
+                <h2 class="font-serif text-4xl md:text-5xl mb-4">Curated Collections</h2>
+                <p class="text-white/60 max-w-2xl mx-auto font-light">Explore our most sought-after portfolios, designed for the discerning traveler. Scroll or use arrows to discover.</p>
+            </div>
+            
+            <div id="carouselWrapper" class="relative group mt-12 feature-card-container">
+                
+                <!-- Prev Button -->
+                <button id="scrollPrev" class="absolute -left-4 md:-left-12 top-1/2 -translate-y-1/2 z-20 w-12 h-12 md:w-16 md:h-16 rounded-full glass flex items-center justify-center text-white hover:text-brand hover:scale-110 transition-all opacity-0 group-hover:opacity-100 shadow-[0_0_20px_rgba(0,0,0,0.5)] border-white/20 hidden md:flex">
+                    <i class="fa-solid fa-chevron-left text-xl"></i>
+                </button>
+                
+                <!-- Carousel Track -->
+                <div id="carouselContainer" class="flex gap-6 md:gap-8 overflow-x-auto snap-x snap-mandatory hide-scrollbar pb-10 pt-4 px-4 -mx-4 cursor-grab active:cursor-grabbing">
+                    
+                    <!-- Dest 1 -->
+                    <div class="snap-center shrink-0 w-[85vw] md:w-[calc(33.333%-1.333rem)] group relative h-[450px] rounded-2xl overflow-hidden feature-card opacity-0 translate-y-10">
+                        <div class="absolute inset-0 bg-cover bg-center transition-transform duration-1000 group-hover:scale-110" style="background-image: url('https://images.unsplash.com/photo-1498503182468-3b51cbb6cb24?w=1000&auto=format&fit=crop&q=80');"></div>
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
+                        <div class="absolute bottom-0 left-0 p-8 w-full transition-transform duration-500 translate-y-6 group-hover:translate-y-0">
+                            <span class="text-brand text-xs font-semibold uppercase tracking-widest mb-2 block">Coastal</span>
+                            <h3 class="text-2xl font-serif text-white mb-2">Amalfi Coast, Italy</h3>
+                            <div class="h-0 opacity-0 group-hover:h-auto group-hover:opacity-100 transition-all duration-500 overflow-hidden mt-3">
+                                <p class="text-white/70 text-sm font-light leading-relaxed">Cliffside luxury retreats, private yacht charters, and authentic culinary masterclasses.</p>
+                                <button class="mt-4 text-xs font-medium uppercase tracking-widest text-brand hover:text-white transition-colors flex items-center gap-2">Explore <i class="fa-solid fa-arrow-right"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Dest 2 -->
+                    <div class="snap-center shrink-0 w-[85vw] md:w-[calc(33.333%-1.333rem)] group relative h-[450px] rounded-2xl overflow-hidden feature-card opacity-0 translate-y-10">
+                        <div class="absolute inset-0 bg-cover bg-center transition-transform duration-1000 group-hover:scale-110" style="background-image: url('https://images.unsplash.com/photo-1492571350019-22de08371fd3?w=1000&auto=format&fit=crop&q=80');"></div>
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
+                        <div class="absolute bottom-0 left-0 p-8 w-full transition-transform duration-500 translate-y-6 group-hover:translate-y-0">
+                            <span class="text-brand text-xs font-semibold uppercase tracking-widest mb-2 block">Cultural</span>
+                            <h3 class="text-2xl font-serif text-white mb-2">Kyoto, Japan</h3>
+                            <div class="h-0 opacity-0 group-hover:h-auto group-hover:opacity-100 transition-all duration-500 overflow-hidden mt-3">
+                                <p class="text-white/70 text-sm font-light leading-relaxed">Exclusive tea ceremonies, secluded ryokan stays, and private zen garden tours.</p>
+                                <button class="mt-4 text-xs font-medium uppercase tracking-widest text-brand hover:text-white transition-colors flex items-center gap-2">Explore <i class="fa-solid fa-arrow-right"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Dest 3 -->
+                    <div class="snap-center shrink-0 w-[85vw] md:w-[calc(33.333%-1.333rem)] group relative h-[450px] rounded-2xl overflow-hidden feature-card opacity-0 translate-y-10">
+                        <div class="absolute inset-0 bg-cover bg-center transition-transform duration-1000 group-hover:scale-110" style="background-image: url('https://images.unsplash.com/photo-1516426122078-c23e76319801?w=1000&auto=format&fit=crop&q=80');"></div>
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
+                        <div class="absolute bottom-0 left-0 p-8 w-full transition-transform duration-500 translate-y-6 group-hover:translate-y-0">
+                            <span class="text-brand text-xs font-semibold uppercase tracking-widest mb-2 block">Adventure</span>
+                            <h3 class="text-2xl font-serif text-white mb-2">Serengeti, Tanzania</h3>
+                            <div class="h-0 opacity-0 group-hover:h-auto group-hover:opacity-100 transition-all duration-500 overflow-hidden mt-3">
+                                <p class="text-white/70 text-sm font-light leading-relaxed">Ultra-luxury tented camps, sunrise hot air balloon safaris, and elite wildlife tracking.</p>
+                                <button class="mt-4 text-xs font-medium uppercase tracking-widest text-brand hover:text-white transition-colors flex items-center gap-2">Explore <i class="fa-solid fa-arrow-right"></i></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dest 4 -->
+                    <div class="snap-center shrink-0 w-[85vw] md:w-[calc(33.333%-1.333rem)] group relative h-[450px] rounded-2xl overflow-hidden feature-card opacity-0 translate-y-10">
+                        <div class="absolute inset-0 bg-cover bg-center transition-transform duration-1000 group-hover:scale-110" style="background-image: url('https://images.unsplash.com/photo-1533105079780-92b9be482077?w=1000&auto=format&fit=crop&q=80');"></div>
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
+                        <div class="absolute bottom-0 left-0 p-8 w-full transition-transform duration-500 translate-y-6 group-hover:translate-y-0">
+                            <span class="text-brand text-xs font-semibold uppercase tracking-widest mb-2 block">Romantic</span>
+                            <h3 class="text-2xl font-serif text-white mb-2">Santorini, Greece</h3>
+                            <div class="h-0 opacity-0 group-hover:h-auto group-hover:opacity-100 transition-all duration-500 overflow-hidden mt-3">
+                                <p class="text-white/70 text-sm font-light leading-relaxed">Private caldera-view villas, sunset catamaran cruises, and exclusive wine tastings.</p>
+                                <button class="mt-4 text-xs font-medium uppercase tracking-widest text-brand hover:text-white transition-colors flex items-center gap-2">Explore <i class="fa-solid fa-arrow-right"></i></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dest 5 -->
+                    <div class="snap-center shrink-0 w-[85vw] md:w-[calc(33.333%-1.333rem)] group relative h-[450px] rounded-2xl overflow-hidden feature-card opacity-0 translate-y-10">
+                        <div class="absolute inset-0 bg-cover bg-center transition-transform duration-1000 group-hover:scale-110" style="background-image: url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1000&auto=format&fit=crop&q=80');"></div>
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
+                        <div class="absolute bottom-0 left-0 p-8 w-full transition-transform duration-500 translate-y-6 group-hover:translate-y-0">
+                            <span class="text-brand text-xs font-semibold uppercase tracking-widest mb-2 block">Alpine</span>
+                            <h3 class="text-2xl font-serif text-white mb-2">Banff, Canada</h3>
+                            <div class="h-0 opacity-0 group-hover:h-auto group-hover:opacity-100 transition-all duration-500 overflow-hidden mt-3">
+                                <p class="text-white/70 text-sm font-light leading-relaxed">Private heli-skiing expeditions, exclusive mountain lodges, and glacial thermal baths.</p>
+                                <button class="mt-4 text-xs font-medium uppercase tracking-widest text-brand hover:text-white transition-colors flex items-center gap-2">Explore <i class="fa-solid fa-arrow-right"></i></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dest 6 -->
+                    <div class="snap-center shrink-0 w-[85vw] md:w-[calc(33.333%-1.333rem)] group relative h-[450px] rounded-2xl overflow-hidden feature-card opacity-0 translate-y-10">
+                        <div class="absolute inset-0 bg-cover bg-center transition-transform duration-1000 group-hover:scale-110" style="background-image: url('https://images.unsplash.com/photo-1506929562872-bb421503ef21?w=1000&auto=format&fit=crop&q=80');"></div>
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
+                        <div class="absolute bottom-0 left-0 p-8 w-full transition-transform duration-500 translate-y-6 group-hover:translate-y-0">
+                            <span class="text-brand text-xs font-semibold uppercase tracking-widest mb-2 block">Island</span>
+                            <h3 class="text-2xl font-serif text-white mb-2">Bora Bora</h3>
+                            <div class="h-0 opacity-0 group-hover:h-auto group-hover:opacity-100 transition-all duration-500 overflow-hidden mt-3">
+                                <p class="text-white/70 text-sm font-light leading-relaxed">Overwater pool bungalows, private atoll dining, and guided marine biology dives.</p>
+                                <button class="mt-4 text-xs font-medium uppercase tracking-widest text-brand hover:text-white transition-colors flex items-center gap-2">Explore <i class="fa-solid fa-arrow-right"></i></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dest 7 -->
+                    <div class="snap-center shrink-0 w-[85vw] md:w-[calc(33.333%-1.333rem)] group relative h-[450px] rounded-2xl overflow-hidden feature-card opacity-0 translate-y-10">
+                        <div class="absolute inset-0 bg-cover bg-center transition-transform duration-1000 group-hover:scale-110" style="background-image: url('https://images.unsplash.com/photo-1526392060635-9d6019884377?w=1000&auto=format&fit=crop&q=80');"></div>
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
+                        <div class="absolute bottom-0 left-0 p-8 w-full transition-transform duration-500 translate-y-6 group-hover:translate-y-0">
+                            <span class="text-brand text-xs font-semibold uppercase tracking-widest mb-2 block">Heritage</span>
+                            <h3 class="text-2xl font-serif text-white mb-2">Machu Picchu, Peru</h3>
+                            <div class="h-0 opacity-0 group-hover:h-auto group-hover:opacity-100 transition-all duration-500 overflow-hidden mt-3">
+                                <p class="text-white/70 text-sm font-light leading-relaxed">Luxury panoramic train rides, private archeological tours, and elite sanctuary lodges.</p>
+                                <button class="mt-4 text-xs font-medium uppercase tracking-widest text-brand hover:text-white transition-colors flex items-center gap-2">Explore <i class="fa-solid fa-arrow-right"></i></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dest 8 -->
+                    <div class="snap-center shrink-0 w-[85vw] md:w-[calc(33.333%-1.333rem)] group relative h-[450px] rounded-2xl overflow-hidden feature-card opacity-0 translate-y-10">
+                        <div class="absolute inset-0 bg-cover bg-center transition-transform duration-1000 group-hover:scale-110" style="background-image: url('https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=1000&auto=format&fit=crop&q=80');"></div>
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
+                        <div class="absolute bottom-0 left-0 p-8 w-full transition-transform duration-500 translate-y-6 group-hover:translate-y-0">
+                            <span class="text-brand text-xs font-semibold uppercase tracking-widest mb-2 block">Urban Luxury</span>
+                            <h3 class="text-2xl font-serif text-white mb-2">Dubai, UAE</h3>
+                            <div class="h-0 opacity-0 group-hover:h-auto group-hover:opacity-100 transition-all duration-500 overflow-hidden mt-3">
+                                <p class="text-white/70 text-sm font-light leading-relaxed">Skyline penthouse suites, private desert reserve glamping, and VIP shopping.</p>
+                                <button class="mt-4 text-xs font-medium uppercase tracking-widest text-brand hover:text-white transition-colors flex items-center gap-2">Explore <i class="fa-solid fa-arrow-right"></i></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dest 9 -->
+                    <div class="snap-center shrink-0 w-[85vw] md:w-[calc(33.333%-1.333rem)] group relative h-[450px] rounded-2xl overflow-hidden feature-card opacity-0 translate-y-10">
+                        <div class="absolute inset-0 bg-cover bg-center transition-transform duration-1000 group-hover:scale-110" style="background-image: url('https://images.unsplash.com/photo-1533240332313-0bc499f5bfcb?w=1000&auto=format&fit=crop&q=80');"></div>
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
+                        <div class="absolute bottom-0 left-0 p-8 w-full transition-transform duration-500 translate-y-6 group-hover:translate-y-0">
+                            <span class="text-brand text-xs font-semibold uppercase tracking-widest mb-2 block">Expedition</span>
+                            <h3 class="text-2xl font-serif text-white mb-2">Queenstown, NZ</h3>
+                            <div class="h-0 opacity-0 group-hover:h-auto group-hover:opacity-100 transition-all duration-500 overflow-hidden mt-3">
+                                <p class="text-white/70 text-sm font-light leading-relaxed">Private helicopter glacier landings, luxury fjords cruises, and alpine vineyard stays.</p>
+                                <button class="mt-4 text-xs font-medium uppercase tracking-widest text-brand hover:text-white transition-colors flex items-center gap-2">Explore <i class="fa-solid fa-arrow-right"></i></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dest 10 -->
+                    <div class="snap-center shrink-0 w-[85vw] md:w-[calc(33.333%-1.333rem)] group relative h-[450px] rounded-2xl overflow-hidden feature-card opacity-0 translate-y-10">
+                        <div class="absolute inset-0 bg-cover bg-center transition-transform duration-1000 group-hover:scale-110" style="background-image: url('https://images.unsplash.com/photo-1580974928064-f0ae47086319?w=1000&auto=format&fit=crop&q=80');"></div>
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
+                        <div class="absolute bottom-0 left-0 p-8 w-full transition-transform duration-500 translate-y-6 group-hover:translate-y-0">
+                            <span class="text-brand text-xs font-semibold uppercase tracking-widest mb-2 block">Ancient</span>
+                            <h3 class="text-2xl font-serif text-white mb-2">Petra, Jordan</h3>
+                            <div class="h-0 opacity-0 group-hover:h-auto group-hover:opacity-100 transition-all duration-500 overflow-hidden mt-3">
+                                <p class="text-white/70 text-sm font-light leading-relaxed">Private night tours by candlelight, luxury desert camp retreats, and Bedouin banquets.</p>
+                                <button class="mt-4 text-xs font-medium uppercase tracking-widest text-brand hover:text-white transition-colors flex items-center gap-2">Explore <i class="fa-solid fa-arrow-right"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+                
+                <!-- Next Button -->
+                <button id="scrollNext" class="absolute -right-4 md:-right-12 top-1/2 -translate-y-1/2 z-20 w-12 h-12 md:w-16 md:h-16 rounded-full glass flex items-center justify-center text-white hover:text-brand hover:scale-110 transition-all opacity-0 group-hover:opacity-100 shadow-[0_0_20px_rgba(0,0,0,0.5)] border-white/20 hidden md:flex">
+                    <i class="fa-solid fa-chevron-right text-xl"></i>
+                </button>
+            </div>
+            
+        </div>
+    </section>
+
+    <!-- Process Section -->
+    <section id="process" class="relative z-10 py-32 px-6 lg:px-8 w-full">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-24 section-header opacity-0">
+                <h2 class="font-serif text-4xl md:text-5xl mb-4">Our Approach</h2>
+                <p class="text-white/60 max-w-2xl mx-auto font-light">A meticulous process designed to transform your travel dreams into flawless reality.</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-12 md:gap-8 relative">
+                <!-- Line connector for desktop -->
+                <div class="hidden md:block absolute top-12 left-[12%] right-[12%] h-[1px] bg-gradient-to-r from-transparent via-brand/30 to-transparent"></div>
+                
+                <!-- Step 1 -->
+                <div class="relative flex flex-col items-center text-center feature-card opacity-0 translate-y-10">
+                    <div class="w-24 h-24 rounded-full glass flex items-center justify-center text-3xl font-serif text-brand mb-6 z-10 shadow-[0_0_20px_rgba(0,0,0,0.5)] border border-brand/20">
+                        01
+                    </div>
+                    <h3 class="text-lg font-medium mb-3 uppercase tracking-wider">Consultation</h3>
+                    <p class="text-white/50 text-sm font-light leading-relaxed">We begin by understanding your travel style, preferences, and wildest aspirations.</p>
+                </div>
+                <!-- Step 2 -->
+                <div class="relative flex flex-col items-center text-center feature-card opacity-0 translate-y-10">
+                    <div class="w-24 h-24 rounded-full glass flex items-center justify-center text-3xl font-serif text-brand mb-6 z-10 shadow-[0_0_20px_rgba(0,0,0,0.5)] border border-brand/20">
+                        02
+                    </div>
+                    <h3 class="text-lg font-medium mb-3 uppercase tracking-wider">Curation</h3>
+                    <p class="text-white/50 text-sm font-light leading-relaxed">Our experts draft a completely custom itinerary, refining it until it resonates perfectly.</p>
+                </div>
+                <!-- Step 3 -->
+                <div class="relative flex flex-col items-center text-center feature-card opacity-0 translate-y-10">
+                    <div class="w-24 h-24 rounded-full glass flex items-center justify-center text-3xl font-serif text-brand mb-6 z-10 shadow-[0_0_20px_rgba(0,0,0,0.5)] border border-brand/20">
+                        03
+                    </div>
+                    <h3 class="text-lg font-medium mb-3 uppercase tracking-wider">Execution</h3>
+                    <p class="text-white/50 text-sm font-light leading-relaxed">We secure reservations, coordinate complex logistics, and arrange exclusive VIP access.</p>
+                </div>
+                <!-- Step 4 -->
+                <div class="relative flex flex-col items-center text-center feature-card opacity-0 translate-y-10">
+                    <div class="w-24 h-24 rounded-full glass flex items-center justify-center text-3xl font-serif text-brand mb-6 z-10 shadow-[0_0_20px_rgba(0,0,0,0.5)] border border-brand/20">
+                        04
+                    </div>
+                    <h3 class="text-lg font-medium mb-3 uppercase tracking-wider">Immersion</h3>
+                    <p class="text-white/50 text-sm font-light leading-relaxed">Embark on your journey with absolute peace of mind and 24/7 dedicated support.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section id="testimonials" class="relative z-10 py-32 px-6 lg:px-8 w-full">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-20 section-header opacity-0">
+                <h2 class="font-serif text-4xl md:text-5xl mb-4">Traveler Journals</h2>
+                <p class="text-white/60 max-w-2xl mx-auto font-light">Stories and reflections from our distinguished clientele.</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Review 1 -->
+                <div class="glass-card p-10 rounded-2xl feature-card opacity-0 translate-y-10 relative">
+                    <i class="fa-solid fa-quote-left text-4xl text-brand/10 absolute top-8 left-8"></i>
+                    <div class="relative z-10 pt-6">
+                        <div class="flex text-brand text-xs mb-6 gap-1">
+                            <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                        </div>
+                        <p class="text-white/80 font-light leading-relaxed mb-8 italic">"Trip Craft didn't just plan a vacation; they orchestrated an absolute masterpiece. The private after-hours tour of the Louvre was breathtaking."</p>
+                        <div class="flex items-center gap-4 border-t border-white/10 pt-6">
+                            <div class="w-10 h-10 rounded-full bg-white/20 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop');"></div>
+                            <div>
+                                <h4 class="text-white text-sm font-medium tracking-wide">Eleanor V.</h4>
+                                <p class="text-white/40 text-xs uppercase tracking-widest mt-1">Paris Journey</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Review 2 -->
+                <div class="glass-card p-10 rounded-2xl feature-card opacity-0 translate-y-10 relative">
+                    <i class="fa-solid fa-quote-left text-4xl text-brand/10 absolute top-8 left-8"></i>
+                    <div class="relative z-10 pt-6">
+                        <div class="flex text-brand text-xs mb-6 gap-1">
+                            <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                        </div>
+                        <p class="text-white/80 font-light leading-relaxed mb-8 italic">"The level of detail in our Serengeti itinerary was staggering. From the luxury tented camps to the sunrise balloon safari, it was flawless."</p>
+                        <div class="flex items-center gap-4 border-t border-white/10 pt-6">
+                            <div class="w-10 h-10 rounded-full bg-white/20 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop');"></div>
+                            <div>
+                                <h4 class="text-white text-sm font-medium tracking-wide">James & Clara T.</h4>
+                                <p class="text-white/40 text-xs uppercase tracking-widest mt-1">Tanzania Safari</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Review 3 -->
+                <div class="glass-card p-10 rounded-2xl feature-card opacity-0 translate-y-10 relative">
+                    <i class="fa-solid fa-quote-left text-4xl text-brand/10 absolute top-8 left-8"></i>
+                    <div class="relative z-10 pt-6">
+                        <div class="flex text-brand text-xs mb-6 gap-1">
+                            <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                        </div>
+                        <p class="text-white/80 font-light leading-relaxed mb-8 italic">"Their 24/7 concierge saved us when our flights were delayed. They rearranged our private transfers and dinner reservations seamlessly."</p>
+                        <div class="flex items-center gap-4 border-t border-white/10 pt-6">
+                            <div class="w-10 h-10 rounded-full bg-white/20 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=200&auto=format&fit=crop');"></div>
+                            <div>
+                                <h4 class="text-white text-sm font-medium tracking-wide">Sophia M.</h4>
+                                <p class="text-white/40 text-xs uppercase tracking-widest mt-1">Kyoto Escape</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Inspiration Section -->
+    <section id="inspiration" class="relative z-10 py-32 px-6 lg:px-8 w-full">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex flex-col md:flex-row md:items-end justify-between mb-16 section-header opacity-0">
+                <div class="max-w-2xl">
+                    <h2 class="font-serif text-4xl md:text-5xl mb-4">The Dispatch</h2>
+                    <p class="text-white/60 font-light">Insights, guides, and inspiration from our travel experts worldwide.</p>
+                </div>
+                <a href="#" class="mt-6 md:mt-0 text-xs font-medium uppercase tracking-widest text-brand hover:text-white transition-colors flex items-center gap-2">View All Articles <i class="fa-solid fa-arrow-right"></i></a>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Article 1 -->
+                <div class="group cursor-pointer feature-card opacity-0 translate-y-10">
+                    <div class="relative h-80 rounded-2xl overflow-hidden mb-6">
+                        <div class="absolute inset-0 bg-cover bg-center transition-transform duration-1000 group-hover:scale-105" style="background-image: url('https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80&w=1000&auto=format&fit=crop');"></div>
+                        <div class="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors duration-500"></div>
+                        <div class="absolute top-4 left-4 glass px-4 py-1 rounded-full text-[10px] uppercase tracking-widest text-white font-medium border border-white/20">Guide</div>
+                    </div>
+                    <p class="text-brand text-xs font-semibold uppercase tracking-widest mb-3">Switzerland</p>
+                    <h3 class="text-2xl font-serif text-white mb-3 group-hover:text-brand transition-colors">The Ultimate Alpine Retreats for Winter 2026</h3>
+                    <p class="text-white/50 text-sm font-light leading-relaxed">Discover our handpicked selection of ultra-luxury chalets offering unparalleled privacy and ski-in/ski-out access in the Swiss Alps.</p>
+                </div>
+                
+                <!-- Article 2 -->
+                <div class="group cursor-pointer feature-card opacity-0 translate-y-10">
+                    <div class="relative h-80 rounded-2xl overflow-hidden mb-6">
+                        <div class="absolute inset-0 bg-cover bg-center transition-transform duration-1000 group-hover:scale-105" style="background-image: url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1000&auto=format&fit=crop');"></div>
+                        <div class="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors duration-500"></div>
+                        <div class="absolute top-4 left-4 glass px-4 py-1 rounded-full text-[10px] uppercase tracking-widest text-white font-medium border border-white/20">Itinerary</div>
+                    </div>
+                    <p class="text-brand text-xs font-semibold uppercase tracking-widest mb-3">Maldives</p>
+                    <h3 class="text-2xl font-serif text-white mb-3 group-hover:text-brand transition-colors">7 Days in Paradise: A Masterclass in Relaxation</h3>
+                    <p class="text-white/50 text-sm font-light leading-relaxed">From underwater dining experiences to private yacht sunset cruises, see how we craft the perfect week in the Indian Ocean.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="relative z-10 py-32 px-6 lg:px-8 w-full">
+        <div class="max-w-7xl mx-auto">
+            <div class="glass-card rounded-3xl p-8 md:p-16 relative overflow-hidden section-header opacity-0 border border-white/10">
+                <!-- decorative blobs -->
+                <div class="absolute -top-32 -right-32 w-96 h-96 bg-brand/10 rounded-full blur-3xl pointer-events-none"></div>
+                <div class="absolute -bottom-32 -left-32 w-96 h-96 bg-white/5 rounded-full blur-3xl pointer-events-none"></div>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 relative z-10">
+                    <div>
+                        <h2 class="font-serif text-4xl md:text-5xl mb-6">Begin Your Journey</h2>
+                        <p class="text-white/70 font-light mb-12 text-lg leading-relaxed">
+                            Ready to craft your next unforgettable experience? Connect with our luxury travel advisors and let the magic begin.
+                        </p>
+                        
+                        <div class="space-y-8">
+                            <div class="flex items-center gap-6 group">
+                                <div class="w-14 h-14 rounded-full border border-white/10 glass flex items-center justify-center text-brand group-hover:border-brand/50 transition-colors">
+                                    <i class="fa-solid fa-phone text-lg"></i>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-white/50 uppercase tracking-widest mb-1">Call Us</p>
+                                    <p class="text-white font-medium text-lg">+1 (800) 555-TRIP</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-6 group">
+                                <div class="w-14 h-14 rounded-full border border-white/10 glass flex items-center justify-center text-brand group-hover:border-brand/50 transition-colors">
+                                    <i class="fa-solid fa-envelope text-lg"></i>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-white/50 uppercase tracking-widest mb-1">Email</p>
+                                    <p class="text-white font-medium text-lg">concierge@tripcraft.com</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-6 group">
+                                <div class="w-14 h-14 rounded-full border border-white/10 glass flex items-center justify-center text-brand group-hover:border-brand/50 transition-colors">
+                                    <i class="fa-solid fa-location-dot text-lg"></i>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-white/50 uppercase tracking-widest mb-1">Headquarters</p>
+                                    <p class="text-white font-medium text-lg">5th Ave, New York, NY</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-black/20 p-8 rounded-2xl border border-white/5">
+                        <form class="space-y-6" onsubmit="event.preventDefault();">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="flex flex-col">
+                                    <label class="text-xs text-white/50 uppercase tracking-widest mb-2">First Name</label>
+                                    <input type="text" class="bg-transparent border-b border-white/20 focus:border-brand py-2 outline-none text-white transition-colors" placeholder="John">
+                                </div>
+                                <div class="flex flex-col">
+                                    <label class="text-xs text-white/50 uppercase tracking-widest mb-2">Last Name</label>
+                                    <input type="text" class="bg-transparent border-b border-white/20 focus:border-brand py-2 outline-none text-white transition-colors" placeholder="Doe">
+                                </div>
+                            </div>
+                            <div class="flex flex-col">
+                                <label class="text-xs text-white/50 uppercase tracking-widest mb-2">Email Address</label>
+                                <input type="email" class="bg-transparent border-b border-white/20 focus:border-brand py-2 outline-none text-white transition-colors" placeholder="john@example.com">
+                            </div>
+                            <div class="flex flex-col">
+                                <label class="text-xs text-white/50 uppercase tracking-widest mb-2">Dream Destination</label>
+                                <input type="text" class="bg-transparent border-b border-white/20 focus:border-brand py-2 outline-none text-white transition-colors" placeholder="e.g. Kyoto, Japan">
+                            </div>
+                            <div class="flex flex-col">
+                                <label class="text-xs text-white/50 uppercase tracking-widest mb-2">Message</label>
+                                <textarea rows="3" class="bg-transparent border-b border-white/20 focus:border-brand py-2 outline-none text-white transition-colors resize-none" placeholder="Tell us about your ideal trip..."></textarea>
+                            </div>
+                            <button type="submit" class="w-full bg-brand text-black font-semibold uppercase tracking-widest py-4 rounded-full hover:bg-white transition-all duration-300 mt-4 hover:shadow-[0_0_20px_rgba(212,175,55,0.4)]">
+                                Send Inquiry
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="relative z-10 border-t border-white/10 pt-24 pb-10 px-6 lg:px-8 w-full mt-auto bg-black/30 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-12 lg:gap-8 mb-16">
+            
+            <!-- Brand & Socials -->
+            <div class="lg:col-span-4 text-center md:text-left">
+                <a href="#" class="font-serif text-2xl tracking-wider text-white font-semibold uppercase flex items-center justify-center md:justify-start gap-2 mb-6">
+                    <i class="fa-solid fa-compass text-brand"></i>
+                    Trip <span class="text-brand font-light">Craft</span>
+                </a>
+                <p class="text-white/60 text-sm font-light leading-relaxed mb-8 max-w-sm mx-auto md:mx-0">
+                    Elevating travel to an art form. We curate bespoke, transformative journeys for the world's most discerning explorers.
+                </p>
+                <div class="flex gap-4 justify-center md:justify-start">
+                    <a href="#" class="w-10 h-10 rounded-full glass flex items-center justify-center text-white/70 hover:text-brand hover:bg-white/10 transition-all border border-white/10 hover:border-brand/50">
+                        <i class="fa-brands fa-instagram"></i>
+                    </a>
+                    <a href="#" class="w-10 h-10 rounded-full glass flex items-center justify-center text-white/70 hover:text-brand hover:bg-white/10 transition-all border border-white/10 hover:border-brand/50">
+                        <i class="fa-brands fa-twitter"></i>
+                    </a>
+                    <a href="#" class="w-10 h-10 rounded-full glass flex items-center justify-center text-white/70 hover:text-brand hover:bg-white/10 transition-all border border-white/10 hover:border-brand/50">
+                        <i class="fa-brands fa-facebook-f"></i>
+                    </a>
+                    <a href="#" class="w-10 h-10 rounded-full glass flex items-center justify-center text-white/70 hover:text-brand hover:bg-white/10 transition-all border border-white/10 hover:border-brand/50">
+                        <i class="fa-brands fa-linkedin-in"></i>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Navigation Links -->
+            <div class="lg:col-span-2 md:col-start-1 lg:col-start-6">
+                <h4 class="text-white font-medium uppercase tracking-widest text-xs mb-6">Explore</h4>
+                <ul class="space-y-4 text-white/60 text-sm font-light">
+                    <li><a href="#destinations" class="hover:text-brand transition-colors flex items-center gap-2"><span class="w-1 h-1 rounded-full bg-brand opacity-0 transition-opacity"></span> Destinations</a></li>
+                    <li><a href="#experiences" class="hover:text-brand transition-colors flex items-center gap-2"><span class="w-1 h-1 rounded-full bg-brand opacity-0 transition-opacity"></span> Experiences</a></li>
+                    <li><a href="#process" class="hover:text-brand transition-colors flex items-center gap-2"><span class="w-1 h-1 rounded-full bg-brand opacity-0 transition-opacity"></span> Our Approach</a></li>
+                    <li><a href="#testimonials" class="hover:text-brand transition-colors flex items-center gap-2"><span class="w-1 h-1 rounded-full bg-brand opacity-0 transition-opacity"></span> Journals</a></li>
+                    <li><a href="#inspiration" class="hover:text-brand transition-colors flex items-center gap-2"><span class="w-1 h-1 rounded-full bg-brand opacity-0 transition-opacity"></span> The Dispatch</a></li>
+                </ul>
+            </div>
+
+            <!-- Company Links -->
+            <div class="lg:col-span-2">
+                <h4 class="text-white font-medium uppercase tracking-widest text-xs mb-6">Company</h4>
+                <ul class="space-y-4 text-white/60 text-sm font-light">
+                    <li><a href="#" class="hover:text-brand transition-colors flex items-center gap-2"><span class="w-1 h-1 rounded-full bg-brand opacity-0 transition-opacity"></span> About Us</a></li>
+                    <li><a href="#" class="hover:text-brand transition-colors flex items-center gap-2"><span class="w-1 h-1 rounded-full bg-brand opacity-0 transition-opacity"></span> Our Advisors</a></li>
+                    <li><a href="#" class="hover:text-brand transition-colors flex items-center gap-2"><span class="w-1 h-1 rounded-full bg-brand opacity-0 transition-opacity"></span> Careers</a></li>
+                    <li><a href="#" class="hover:text-brand transition-colors flex items-center gap-2"><span class="w-1 h-1 rounded-full bg-brand opacity-0 transition-opacity"></span> Press & Media</a></li>
+                    <li><a href="#" class="hover:text-brand transition-colors flex items-center gap-2"><span class="w-1 h-1 rounded-full bg-brand opacity-0 transition-opacity"></span> Partnerships</a></li>
+                </ul>
+            </div>
+
+            <!-- Newsletter -->
+            <div class="lg:col-span-3">
+                <h4 class="text-white font-medium uppercase tracking-widest text-xs mb-6">The Insider</h4>
+                <p class="text-white/60 text-sm font-light leading-relaxed mb-6">
+                    Join our private list to receive exclusive travel inspiration, unlisted villa access, and insider guides.
+                </p>
+                <form class="relative" onsubmit="event.preventDefault();">
+                    <input type="email" placeholder="Your Email Address" class="w-full bg-transparent border-b border-white/20 focus:border-brand py-3 outline-none text-white text-sm transition-colors pr-10 font-light placeholder-white/30">
+                    <button type="submit" class="absolute right-0 top-3 text-white/50 hover:text-brand transition-colors">
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </form>
+            </div>
+            
+        </div>
+
+        <div class="max-w-7xl mx-auto pt-8 border-t border-white/10 text-center flex flex-col md:flex-row justify-between items-center gap-6 text-[10px] text-white/40 font-light uppercase tracking-widest">
+            <p>&copy; 2026 Trip Craft Luxury Planners. All Rights Reserved.</p>
+            <div class="flex gap-6">
+                <a href="#" class="hover:text-white transition-colors">Privacy Policy</a>
+                <a href="#" class="hover:text-white transition-colors">Terms of Service</a>
+                <a href="#" class="hover:text-white transition-colors">Cookie Policy</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- CSS Keyframes for small local animations -->
+    <style>
+        @keyframes scrollDown {
+            0% { transform: translateY(-100%); }
+            50% { transform: translateY(100%); }
+            100% { transform: translateY(100%); }
+        }
+    </style>
+
+    <!-- Anime.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // 1. Background Slideshow Logic
+            const slides = document.querySelectorAll('.bg-slide');
+            let currentSlide = 0;
+            const slideInterval = 6000; // Change image every 6 seconds
+
+            function nextSlide() {
+                // Remove active class from current
+                slides[currentSlide].classList.remove('active');
+                
+                // Move to next slide
+                currentSlide = (currentSlide + 1) % slides.length;
+                
+                // Add active class to new current
+                slides[currentSlide].classList.add('active');
+            }
+
+            // Start slideshow
+            setInterval(nextSlide, slideInterval);
+
+            // 2. Initial Page Load Animations (Anime.js)
+            const tl = anime.timeline({
+                easing: 'easeOutExpo',
+                duration: 1500
+            });
+
+            // Navbar items drop down
+            tl.add({
+                targets: ['.nav-brand', '.nav-links', '.nav-cta'],
+                translateY: [-30, 0],
+                opacity: [0, 1],
+                delay: anime.stagger(150),
+                duration: 1200,
+            })
+            // Hero Eyebrow
+            .add({
+                targets: '.hero-eyebrow',
+                translateX: [-30, 0],
+                opacity: [0, 1],
+                duration: 1000,
+            }, '-=800')
+            // Hero Title Slide Up
+            .add({
+                targets: '.hero-title',
+                translateY: [50, 0],
+                opacity: [0, 1],
+                duration: 1200,
+            }, '-=800')
+            // Hero Subtitle
+            .add({
+                targets: '.hero-subtitle',
+                translateY: [30, 0],
+                opacity: [0, 1],
+                duration: 1000,
+            }, '-=900')
+            // Hero Buttons
+            .add({
+                targets: '.hero-buttons',
+                translateY: [20, 0],
+                opacity: [0, 1],
+                duration: 1000,
+            }, '-=800')
+            // Scroll Indicator
+            .add({
+                targets: '.scroll-indicator',
+                opacity: [0, 1],
+                duration: 1000,
+            }, '-=500');
+
+            // 3. Scroll Animations using Intersection Observer
+            const animateOnScroll = (entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        // Header text fade in
+                        if (entry.target.classList.contains('section-header')) {
+                            anime({
+                                targets: entry.target,
+                                translateY: [30, 0],
+                                opacity: [0, 1],
+                                duration: 1000,
+                                easing: 'easeOutCubic'
+                            });
+                        }
+                        
+                        // Feature cards stagger
+                        if (entry.target.classList.contains('feature-card-container')) {
+                            const cards = entry.target.querySelectorAll('.feature-card');
+                            anime({
+                                targets: cards,
+                                translateY: [50, 0],
+                                opacity: [0, 1],
+                                delay: anime.stagger(150),
+                                duration: 1000,
+                                easing: 'easeOutQuart'
+                            });
+                        }
+
+                        // Stop observing once animated
+                        observer.unobserve(entry.target);
+                    }
+                });
+            };
+
+            const scrollObserver = new IntersectionObserver(animateOnScroll, {
+                root: null,
+                threshold: 0.15, // Trigger when 15% visible
+                rootMargin: "0px"
+            });
+
+            // Observe all section headers
+            document.querySelectorAll('.section-header').forEach(el => scrollObserver.observe(el));
+            
+            // Observe all grids containing feature cards
+            document.querySelectorAll('.grid').forEach(container => {
+                if(container.querySelector('.feature-card')) {
+                    container.classList.add('feature-card-container');
+                    scrollObserver.observe(container);
+                }
+            });
+
+            // 4. Carousel Slider Logic
+            const carouselContainer = document.getElementById('carouselContainer');
+            const carouselWrapper = document.getElementById('carouselWrapper');
+            const scrollNext = document.getElementById('scrollNext');
+            const scrollPrev = document.getElementById('scrollPrev');
+
+            // Ensure the newly added carousel wrapper is observed by our IntersectionObserver
+            if (carouselWrapper) {
+                scrollObserver.observe(carouselWrapper);
+            }
+
+            // Scroll Next
+            if(scrollNext && carouselContainer) {
+                scrollNext.addEventListener('click', () => {
+                    const card = carouselContainer.querySelector('.snap-center');
+                    if (card) {
+                        // Calculate width of one card + the gap (md:gap-8 is 32px, gap-6 is 24px)
+                        const gap = window.innerWidth >= 768 ? 32 : 24; 
+                        const scrollAmount = card.offsetWidth + gap;
+                        carouselContainer.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+                    }
+                });
+            }
+
+            // Scroll Prev
+            if(scrollPrev && carouselContainer) {
+                scrollPrev.addEventListener('click', () => {
+                    const card = carouselContainer.querySelector('.snap-center');
+                    if (card) {
+                        const gap = window.innerWidth >= 768 ? 32 : 24;
+                        const scrollAmount = card.offsetWidth + gap;
+                        carouselContainer.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+                    }
+                });
+            }
+
+        });
+    </script>
+</body>
+</html>
