@@ -7,26 +7,47 @@
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <!-- Leaflet (OpenStreetMap) for the real interactive map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     fontFamily: {
                         sans: ['Inter', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
                     },
                     colors: {
+                        // Signature brand gold, matching the Trip Craft landing page
                         primary: {
-                            50: '#f0f9ff',
-                            100: '#e0f2fe',
-                            200: '#bae6fd',
-                            300: '#7dd3fc',
-                            500: '#0ea5e9',
-                            600: '#0284c7',
-                            700: '#0369a1',
-                            800: '#075985',
-                            900: '#0c4a6e',
+                            50: '#201a0c',
+                            100: '#2f2712',
+                            200: '#4a3c1c',
+                            300: '#6b5726',
+                            400: '#8f7530',
+                            500: '#d4af37',
+                            600: '#b08d2e',
+                            700: '#caa23e',
+                            800: '#e2c468',
+                            900: '#f3e2ab',
+                        },
+                        // Inverted slate scale so the whole dashboard reads as a dark, luxury UI
+                        slate: {
+                            50:  '#14161d',
+                            100: '#1c1f28',
+                            200: '#2b2f3b',
+                            300: '#3c4150',
+                            400: '#737a8c',
+                            500: '#9298a8',
+                            600: '#aeb3c0',
+                            700: '#c7cbd6',
+                            800: '#e4e6ea',
+                            900: '#f7f8fa',
                         }
                     }
                 }
@@ -36,7 +57,10 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f8fafc;
+            background-color: #08090c;
+        }
+        h1, h2, h3 {
+            font-family: 'Playfair Display', serif;
         }
         /* Hide scrollbar for clean UI but keep functionality */
         .no-scrollbar::-webkit-scrollbar {
@@ -57,6 +81,11 @@
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
+        /* Custom dark scrollbar to match the luxury theme */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0a0b0f; }
+        ::-webkit-scrollbar-thumb { background: #3c4150; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #d4af37; }
     </style>
 </head>
 <body class="text-slate-800 antialiased h-screen overflow-hidden flex">
@@ -65,7 +94,7 @@
     <div id="mobile-overlay" class="fixed inset-0 bg-slate-900/50 z-40 hidden md:hidden transition-opacity" onclick="toggleSidebar()"></div>
 
     <!-- Sidebar -->
-    <aside id="sidebar" class="bg-white w-64 h-full border-r border-slate-200 flex flex-col fixed md:relative z-50 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out">
+    <aside id="sidebar" class="bg-slate-100 w-64 h-full border-r border-slate-200 flex flex-col fixed md:relative z-50 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out">
         <!-- Logo -->
         <div class="h-16 flex items-center px-6 border-b border-slate-200">
             <div class="flex items-center gap-2 text-primary-600">
@@ -86,6 +115,10 @@
             <button onclick="switchView('discover')" id="nav-discover" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium">
                 <i class="fa-solid fa-compass w-5 text-center"></i>
                 Discover Destinations
+            </button>
+            <button onclick="switchView('map')" id="nav-map" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium">
+                <i class="fa-solid fa-map-location-dot w-5 text-center"></i>
+                Explore Map
             </button>
             <button class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium mt-4 cursor-not-allowed opacity-60">
                 <i class="fa-solid fa-suitcase-rolling w-5 text-center"></i>
@@ -116,14 +149,14 @@
     <main class="flex-1 flex flex-col h-full overflow-hidden bg-slate-50">
         
         <!-- Header -->
-        <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 sm:px-6 lg:px-8 shrink-0">
+        <header class="h-16 bg-slate-100 border-b border-slate-200 flex items-center justify-between px-4 sm:px-6 lg:px-8 shrink-0">
             <div class="flex items-center gap-4">
                 <button onclick="toggleSidebar()" class="md:hidden text-slate-500 hover:text-slate-800 focus:outline-none">
                     <i class="fa-solid fa-bars text-xl"></i>
                 </button>
                 <div class="relative hidden sm:block">
                     <i class="fa-solid fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
-                    <input type="text" placeholder="Search destinations, trips..." class="pl-10 pr-4 py-2 bg-slate-100 border-transparent rounded-full text-sm focus:bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all w-64">
+                    <input type="text" placeholder="Search destinations, trips..." class="pl-10 pr-4 py-2 bg-slate-100 border-transparent rounded-full text-sm focus:bg-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all w-64">
                 </div>
             </div>
             
@@ -174,7 +207,7 @@
 
                 <!-- Stats Grid -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6">
-                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow">
+                    <div class="bg-slate-100 p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow">
                         <div class="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 shrink-0">
                             <i class="fa-solid fa-passport text-xl"></i>
                         </div>
@@ -183,7 +216,7 @@
                             <p class="text-2xl font-bold text-slate-900">14</p>
                         </div>
                     </div>
-                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow">
+                    <div class="bg-slate-100 p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow">
                         <div class="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0">
                             <i class="fa-solid fa-map-location-dot text-xl"></i>
                         </div>
@@ -192,7 +225,7 @@
                             <p class="text-2xl font-bold text-slate-900">28</p>
                         </div>
                     </div>
-                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow">
+                    <div class="bg-slate-100 p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow">
                         <div class="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600 shrink-0">
                             <i class="fa-solid fa-calendar-check text-xl"></i>
                         </div>
@@ -211,13 +244,13 @@
                         <!-- Upcoming Trip Card -->
                         <div>
                             <h2 class="text-lg font-bold text-slate-800 mb-4">Next Adventure</h2>
-                            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col md:flex-row hover:shadow-md transition-shadow">
+                            <div class="bg-slate-100 rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col md:flex-row hover:shadow-md transition-shadow">
                                 <div class="md:w-2/5 h-48 md:h-auto relative">
                                     <img src="https://images.unsplash.com/photo-1499856871958-5b9627545d1a?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" 
                                          onerror="this.src='https://placehold.co/800x600/e2e8f0/475569?text=Paris+Trip'" 
                                          alt="Paris" 
                                          class="w-full h-full object-cover">
-                                    <div class="absolute top-4 left-4 bg-white/90 backdrop-blur text-slate-800 text-xs font-bold px-3 py-1 rounded-full shadow-sm">
+                                    <div class="absolute top-4 left-4 bg-white/90 backdrop-blur text-black text-xs font-bold px-3 py-1 rounded-full shadow-sm">
                                         In 12 Days
                                     </div>
                                 </div>
@@ -262,7 +295,7 @@
                             </div>
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <!-- Recommendation 1 -->
-                                <div class="bg-white rounded-2xl border border-slate-200 p-3 shadow-sm hover:shadow-md transition-shadow flex gap-4 cursor-pointer group">
+                                <div class="bg-slate-100 rounded-2xl border border-slate-200 p-3 shadow-sm hover:shadow-md transition-shadow flex gap-4 cursor-pointer group">
                                     <img src="https://images.unsplash.com/photo-1523482580672-f109ba8cb9be?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&q=80" 
                                          alt="Australia" class="w-24 h-24 rounded-xl object-cover group-hover:scale-105 transition-transform duration-300 shrink-0">
                                     <div class="flex flex-col justify-center flex-1">
@@ -275,7 +308,7 @@
                                     </div>
                                 </div>
                                 <!-- Recommendation 2 -->
-                                <div class="bg-white rounded-2xl border border-slate-200 p-3 shadow-sm hover:shadow-md transition-shadow flex gap-4 cursor-pointer group">
+                                <div class="bg-slate-100 rounded-2xl border border-slate-200 p-3 shadow-sm hover:shadow-md transition-shadow flex gap-4 cursor-pointer group">
                                     <img src="https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&q=80" 
                                          alt="Japan" class="w-24 h-24 rounded-xl object-cover group-hover:scale-105 transition-transform duration-300 shrink-0">
                                     <div class="flex flex-col justify-center flex-1">
@@ -301,15 +334,26 @@
                             <i class="fa-solid fa-cloud absolute -top-8 -right-8 text-8xl text-white/10"></i>
                             
                             <div class="p-5 relative z-10">
-                                <div class="flex justify-between items-center mb-4">
+                                <div class="flex justify-between items-center mb-3">
                                     <div>
-                                        <h3 class="font-bold text-lg">Paris, France</h3>
+                                        <h3 id="weather-city-name" class="font-bold text-lg">Paris, France</h3>
                                         <p class="text-blue-100 text-xs">Destination Weather (Live)</p>
                                     </div>
                                     <button onclick="renderWeather()" class="text-white/80 hover:text-white transition-colors" title="Refresh Weather">
                                         <i class="fa-solid fa-rotate-right text-sm"></i>
                                     </button>
                                 </div>
+
+                                <!-- City search -->
+                                <form id="weather-search-form" class="flex items-center gap-2 mb-4" onsubmit="return false;">
+                                    <div class="relative flex-1">
+                                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-white/60 text-xs"></i>
+                                        <input id="weather-city-input" type="text" placeholder="Search city..." autocomplete="off"
+                                            class="w-full pl-8 pr-3 py-1.5 bg-white/15 placeholder-white/60 text-white text-sm rounded-lg outline-none focus:bg-slate-200/25 transition-colors">
+                                    </div>
+                                    <button id="weather-search-btn" type="submit" class="shrink-0 bg-white/20 hover:bg-white/30 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors">Go</button>
+                                </form>
+                                <p id="weather-error" class="hidden text-xs text-amber-100 bg-white/10 rounded-lg px-2 py-1 -mt-2 mb-3"></p>
 
                                 <div id="weather-content" class="min-h-[120px] flex flex-col justify-center">
                                     <div class="flex items-center gap-4 mb-6">
@@ -321,17 +365,17 @@
                         </div>
 
                         <!-- Working Calendar Card -->
-                        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+                        <div class="bg-slate-100 rounded-2xl border border-slate-200 shadow-sm p-5">
                             <div class="flex justify-between items-center mb-4">
                                 <h3 id="month-year-text" class="font-bold text-slate-900">October 2026</h3>
                                 <div class="flex gap-2">
-                                    <!-- In a full app, these would change months. Visual only for now -->
-                                    <button class="w-7 h-7 rounded-lg flex items-center justify-center text-slate-500 hover:bg-slate-100 transition-colors">
+                                    <button onclick="changeCalendarMonth(-1)" class="w-7 h-7 rounded-lg flex items-center justify-center text-slate-500 hover:bg-slate-100 transition-colors" title="Previous month">
                                         <i class="fa-solid fa-chevron-left text-xs"></i>
                                     </button>
-                                    <button class="w-7 h-7 rounded-lg flex items-center justify-center text-slate-500 hover:bg-slate-100 transition-colors">
+                                    <button onclick="changeCalendarMonth(1)" class="w-7 h-7 rounded-lg flex items-center justify-center text-slate-500 hover:bg-slate-100 transition-colors" title="Next month">
                                         <i class="fa-solid fa-chevron-right text-xs"></i>
                                     </button>
+                                    <button onclick="goToCurrentMonth()" class="text-[11px] font-semibold text-primary-600 hover:text-primary-700 px-1.5 rounded-lg transition-colors" title="Jump to today">Today</button>
                                 </div>
                             </div>
                             
@@ -364,7 +408,7 @@
                     <div class="flex gap-2 w-full sm:w-auto">
                         <div class="relative w-full sm:w-64">
                             <i class="fa-solid fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
-                            <input type="text" id="country-search" placeholder="Search countries..." class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all">
+                            <input type="text" id="country-search" placeholder="Search countries..." class="w-full pl-10 pr-4 py-2 bg-slate-100 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all">
                         </div>
                     </div>
                 </div>
@@ -379,6 +423,35 @@
                 </div>
             </div>
 
+            <!-- Explore Map View (real OpenStreetMap, via Leaflet) -->
+            <div id="view-map" class="view-section space-y-6 max-w-6xl mx-auto pb-10">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <h1 class="text-2xl font-bold text-slate-900">Explore the Map</h1>
+                        <p class="text-slate-500 mt-1">Pan and zoom the real map, search any place, and start planning a trip there.</p>
+                    </div>
+                    <div class="flex gap-2 w-full sm:w-auto">
+                        <form id="map-search-form" onsubmit="return false;" class="relative w-full sm:w-72">
+                            <i class="fa-solid fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
+                            <input type="text" id="map-search-input" placeholder="Search a city or place..." autocomplete="off" class="w-full pl-10 pr-20 py-2 bg-slate-100 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all">
+                            <button id="map-search-btn" type="submit" class="absolute right-1 top-1 bottom-1 px-3 bg-primary-600 hover:bg-primary-700 text-white text-xs font-semibold rounded-md transition-colors">Go</button>
+                        </form>
+                    </div>
+                </div>
+                <p id="map-search-error" class="hidden text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2"></p>
+
+                <!-- Popular destination quick-picks -->
+                <div class="flex flex-wrap gap-2" id="map-quick-picks">
+                    <!-- Populated by JS -->
+                </div>
+
+                <!-- Map Container -->
+                <div class="bg-slate-100 rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div id="map-explorer" class="w-full" style="height: 520px;"></div>
+                </div>
+                <p class="text-xs text-slate-400 text-center">Map data © <a href="https://www.openstreetmap.org/copyright" target="_blank" class="underline hover:text-slate-600">OpenStreetMap</a> contributors</p>
+            </div>
+
             <!-- New Trip Form View -->
             <div id="view-new-trip" class="view-section space-y-6 max-w-4xl mx-auto pb-10">
                 <div class="text-center mb-8 pt-4">
@@ -386,16 +459,16 @@
                     <p class="text-slate-500">Tell us what your ideal trip looks like. TripCraft AI will build a personalized itinerary.</p>
                 </div>
 
-                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8 space-y-8 relative overflow-hidden">
+                <div class="bg-slate-100 rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8 space-y-8 relative overflow-hidden">
                     <!-- Loading Overlay for AI Generation -->
                     <div id="ai-loading-overlay" class="absolute inset-0 bg-white/90 backdrop-blur-sm z-10 flex-col items-center justify-center hidden">
                         <div class="relative w-20 h-20 mb-4">
-                            <div class="absolute inset-0 border-4 border-slate-100 rounded-full"></div>
+                            <div class="absolute inset-0 border-4 border-gray-200 rounded-full"></div>
                             <div class="absolute inset-0 border-4 border-primary-600 rounded-full border-t-transparent animate-spin"></div>
                             <i class="fa-solid fa-wand-magic-sparkles absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-primary-600 text-xl"></i>
                         </div>
-                        <h3 class="text-xl font-bold text-slate-900">Crafting your perfect trip...</h3>
-                        <p class="text-slate-500 mt-2 text-sm text-center max-w-xs">Analyzing millions of data points to build your personalized itinerary.</p>
+                        <h3 class="text-xl font-bold text-gray-900">Crafting your perfect trip...</h3>
+                        <p class="text-gray-500 mt-2 text-sm text-center max-w-xs">Analyzing millions of data points to build your personalized itinerary.</p>
                     </div>
 
                     <!-- 1 & 2: Destinations -->
@@ -404,14 +477,14 @@
                             <label class="block text-sm font-bold text-slate-900 mb-2">1. Where are you starting from?</label>
                             <div class="relative">
                                 <i class="fa-solid fa-location-dot absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
-                                <input type="text" placeholder="e.g. Mumbai, India" class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all">
+                                <input id="trip-from-input" type="text" placeholder="e.g. Mumbai, India" class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all">
                             </div>
                         </div>
                         <div>
                             <label class="block text-sm font-bold text-slate-900 mb-2">2. Where do you want to go?</label>
                             <div class="relative">
                                 <i class="fa-solid fa-plane-arrival absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
-                                <input type="text" placeholder="e.g. Bali, Indonesia" class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all">
+                                <input id="trip-to-input" type="text" placeholder="e.g. Bali, Indonesia" class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all">
                             </div>
                         </div>
                     </div>
@@ -420,11 +493,11 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label class="block text-sm font-bold text-slate-900 mb-2">Departure date</label>
-                            <input type="date" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all text-slate-600">
+                            <input type="date" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all text-slate-600">
                         </div>
                         <div>
                             <label class="block text-sm font-bold text-slate-900 mb-2">Return date</label>
-                            <input type="date" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all text-slate-600">
+                            <input type="date" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all text-slate-600">
                         </div>
                     </div>
 
@@ -433,9 +506,9 @@
                         <label class="block text-sm font-bold text-slate-900 mb-3">3. Number of travelers</label>
                         <div class="flex flex-wrap gap-3" id="traveler-options">
                             <button class="traveler-btn active px-4 py-2 border-2 border-primary-600 bg-primary-50 text-primary-700 font-medium rounded-xl text-sm transition-all">Solo</button>
-                            <button class="traveler-btn px-4 py-2 border-2 border-slate-100 bg-white hover:border-slate-200 text-slate-600 font-medium rounded-xl text-sm transition-all">Couple / 2</button>
-                            <button class="traveler-btn px-4 py-2 border-2 border-slate-100 bg-white hover:border-slate-200 text-slate-600 font-medium rounded-xl text-sm transition-all">Friends / Family (3-5)</button>
-                            <button class="traveler-btn px-4 py-2 border-2 border-slate-100 bg-white hover:border-slate-200 text-slate-600 font-medium rounded-xl text-sm transition-all">Group (6+)</button>
+                            <button class="traveler-btn px-4 py-2 border-2 border-slate-100 bg-slate-100 hover:border-slate-200 text-slate-600 font-medium rounded-xl text-sm transition-all">Couple / 2</button>
+                            <button class="traveler-btn px-4 py-2 border-2 border-slate-100 bg-slate-100 hover:border-slate-200 text-slate-600 font-medium rounded-xl text-sm transition-all">Friends / Family (3-5)</button>
+                            <button class="traveler-btn px-4 py-2 border-2 border-slate-100 bg-slate-100 hover:border-slate-200 text-slate-600 font-medium rounded-xl text-sm transition-all">Group (6+)</button>
                         </div>
                     </div>
 
@@ -461,16 +534,16 @@
                         <div class="flex flex-wrap gap-3" id="preference-options">
                             <button class="pref-btn active px-4 py-2 border-2 border-primary-600 bg-primary-50 text-primary-700 font-medium rounded-xl text-sm transition-all">🏔️ Adventure & trekking</button>
                             <button class="pref-btn active px-4 py-2 border-2 border-primary-600 bg-primary-50 text-primary-700 font-medium rounded-xl text-sm transition-all">🏖️ Relaxation & beaches</button>
-                            <button class="pref-btn px-4 py-2 border-2 border-slate-100 bg-white hover:border-slate-200 text-slate-600 font-medium rounded-xl text-sm transition-all">🏛️ Culture & history</button>
-                            <button class="pref-btn px-4 py-2 border-2 border-slate-100 bg-white hover:border-slate-200 text-slate-600 font-medium rounded-xl text-sm transition-all">🌿 Nature & wildlife</button>
-                            <button class="pref-btn px-4 py-2 border-2 border-slate-100 bg-white hover:border-slate-200 text-slate-600 font-medium rounded-xl text-sm transition-all">🍜 Food & local</button>
+                            <button class="pref-btn px-4 py-2 border-2 border-slate-100 bg-slate-100 hover:border-slate-200 text-slate-600 font-medium rounded-xl text-sm transition-all">🏛️ Culture & history</button>
+                            <button class="pref-btn px-4 py-2 border-2 border-slate-100 bg-slate-100 hover:border-slate-200 text-slate-600 font-medium rounded-xl text-sm transition-all">🌿 Nature & wildlife</button>
+                            <button class="pref-btn px-4 py-2 border-2 border-slate-100 bg-slate-100 hover:border-slate-200 text-slate-600 font-medium rounded-xl text-sm transition-all">🍜 Food & local</button>
                         </div>
                     </div>
 
                     <!-- 6. Additional Preferences -->
                     <div>
                         <label class="block text-sm font-bold text-slate-900 mb-2">6. Additional preferences (optional)</label>
-                        <textarea placeholder="e.g. Vegetarian food options, no early morning flights, must visit specific landmark..." class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all min-h-[100px] resize-y"></textarea>
+                        <textarea placeholder="e.g. Vegetarian food options, no early morning flights, must visit specific landmark..." class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all min-h-[100px] resize-y"></textarea>
                     </div>
 
                     <div class="pt-4 border-t border-slate-100">
@@ -485,7 +558,7 @@
             <div id="view-ai-result" class="view-section space-y-6 max-w-7xl mx-auto pb-10">
                 
                 <!-- 1. Trip Overview & Actions -->
-                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                <div class="bg-slate-100 rounded-2xl border border-slate-200 shadow-sm p-6">
                     <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
                         <div>
                             <div class="flex items-center gap-2 mb-1">
@@ -504,13 +577,13 @@
                         
                         <!-- 8. Actions -->
                         <div class="flex flex-wrap gap-3 w-full lg:w-auto">
-                            <button class="flex-1 lg:flex-none px-4 py-2 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-medium rounded-lg text-sm transition-colors shadow-sm flex items-center justify-center gap-2">
+                            <button class="flex-1 lg:flex-none px-4 py-2 border border-slate-200 bg-slate-100 hover:bg-slate-50 text-slate-700 font-medium rounded-lg text-sm transition-colors shadow-sm flex items-center justify-center gap-2">
                                 <i class="fa-solid fa-pen"></i> Edit
                             </button>
-                            <button class="flex-1 lg:flex-none px-4 py-2 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-medium rounded-lg text-sm transition-colors shadow-sm flex items-center justify-center gap-2">
+                            <button class="flex-1 lg:flex-none px-4 py-2 border border-slate-200 bg-slate-100 hover:bg-slate-50 text-slate-700 font-medium rounded-lg text-sm transition-colors shadow-sm flex items-center justify-center gap-2">
                                 <i class="fa-solid fa-rotate-right"></i> Regenerate
                             </button>
-                            <button class="flex-1 lg:flex-none px-4 py-2 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-medium rounded-lg text-sm transition-colors shadow-sm flex items-center justify-center gap-2">
+                            <button class="flex-1 lg:flex-none px-4 py-2 border border-slate-200 bg-slate-100 hover:bg-slate-50 text-slate-700 font-medium rounded-lg text-sm transition-colors shadow-sm flex items-center justify-center gap-2">
                                 <i class="fa-solid fa-file-pdf text-red-500"></i> PDF
                             </button>
                             <button class="flex-1 lg:flex-none px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg text-sm transition-colors shadow-sm flex items-center justify-center gap-2">
@@ -526,7 +599,7 @@
                     <div class="xl:col-span-2 space-y-6">
                         
                         <!-- 2. Day-wise Itinerary -->
-                        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                        <div class="bg-slate-100 rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
                             <div class="p-5 border-b border-slate-200 bg-slate-50">
                                 <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
                                     <i class="fa-regular fa-map"></i> Day-wise Itinerary
@@ -592,7 +665,7 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             
                             <!-- 3. Route Map -->
-                            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 flex flex-col">
+                            <div class="bg-slate-100 rounded-2xl border border-slate-200 shadow-sm p-5 flex flex-col">
                                 <h2 class="text-lg font-bold text-slate-900 mb-4">Route Map</h2>
                                 <div class="bg-slate-100 rounded-xl flex-1 relative overflow-hidden min-h-[250px] border border-slate-200 flex items-center justify-center">
                                     <!-- Placeholder Map Visual -->
@@ -604,14 +677,14 @@
                                         <div class="flex items-center justify-between mb-8">
                                             <div class="flex flex-col items-center">
                                                 <div class="w-4 h-4 bg-primary-600 rounded-full shadow-[0_0_0_4px_white]"></div>
-                                                <span class="text-xs font-bold bg-white/90 px-2 py-1 rounded shadow-sm mt-2">Uluwatu</span>
+                                                <span class="text-xs font-bold bg-white/90 text-black px-2 py-1 rounded shadow-sm mt-2">Uluwatu</span>
                                             </div>
                                             <div class="flex-1 border-t-2 border-dashed border-slate-800 relative top-[-10px]">
-                                                <i class="fa-solid fa-car absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-slate-800 bg-white rounded-full p-1 text-xs"></i>
+                                                <i class="fa-solid fa-car absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-slate-800 bg-slate-100 rounded-full p-1 text-xs"></i>
                                             </div>
                                             <div class="flex flex-col items-center">
                                                 <div class="w-4 h-4 bg-primary-600 rounded-full shadow-[0_0_0_4px_white]"></div>
-                                                <span class="text-xs font-bold bg-white/90 px-2 py-1 rounded shadow-sm mt-2">Canggu</span>
+                                                <span class="text-xs font-bold bg-white/90 text-black px-2 py-1 rounded shadow-sm mt-2">Canggu</span>
                                             </div>
                                         </div>
                                         <div class="flex items-center justify-end">
@@ -620,7 +693,7 @@
                                         <div class="flex justify-end">
                                             <div class="flex flex-col items-center">
                                                 <div class="w-4 h-4 bg-red-500 rounded-full shadow-[0_0_0_4px_white]"></div>
-                                                <span class="text-xs font-bold bg-white/90 px-2 py-1 rounded shadow-sm mt-2">Ubud</span>
+                                                <span class="text-xs font-bold bg-white/90 text-black px-2 py-1 rounded shadow-sm mt-2">Ubud</span>
                                             </div>
                                         </div>
                                     </div>
@@ -628,7 +701,7 @@
                             </div>
 
                             <!-- 4. Budget Breakdown -->
-                            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+                            <div class="bg-slate-100 rounded-2xl border border-slate-200 shadow-sm p-5">
                                 <h2 class="text-lg font-bold text-slate-900 mb-4">Budget Estimate</h2>
                                 
                                 <div class="space-y-4">
@@ -683,7 +756,7 @@
                     <div class="space-y-6">
                         
                         <!-- 5. Destination Weather -->
-                        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 flex items-center justify-between">
+                        <div class="bg-slate-100 rounded-2xl border border-slate-200 shadow-sm p-5 flex items-center justify-between">
                             <div>
                                 <h3 class="text-sm font-bold text-slate-900">Bali Weather <span class="text-xs font-normal text-slate-500">(Nov)</span></h3>
                                 <div class="flex items-center gap-2 mt-1">
@@ -701,7 +774,7 @@
                         </div>
 
                         <!-- 6. Currency Exchange -->
-                        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+                        <div class="bg-slate-100 rounded-2xl border border-slate-200 shadow-sm p-5">
                             <h3 class="text-sm font-bold text-slate-900 mb-3">Currency Exchange</h3>
                             <div class="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-100">
                                 <div class="flex items-center gap-2">
@@ -717,7 +790,7 @@
                         </div>
 
                         <!-- 7. AI Travel Copilot -->
-                        <div class="bg-white rounded-2xl border border-primary-200 shadow-md overflow-hidden flex flex-col h-[400px]">
+                        <div class="bg-slate-100 rounded-2xl border border-primary-200 shadow-md overflow-hidden flex flex-col h-[400px]">
                             <div class="bg-gradient-to-r from-primary-600 to-primary-700 p-4 text-white flex items-center gap-3">
                                 <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center shrink-0">
                                     <i class="fa-solid fa-robot text-sm"></i>
@@ -734,29 +807,29 @@
                                     <div class="w-6 h-6 rounded-full bg-primary-100 flex items-center justify-center shrink-0 text-primary-600 mt-1">
                                         <i class="fa-solid fa-robot text-[10px]"></i>
                                     </div>
-                                    <div class="bg-white border border-slate-200 rounded-xl rounded-tl-none p-3 shadow-sm text-sm text-slate-700">
+                                    <div class="bg-slate-100 border border-slate-200 rounded-xl rounded-tl-none p-3 shadow-sm text-sm text-slate-700">
                                         I've generated your Bali trip based on your preferences! What would you like to tweak?
                                     </div>
                                 </div>
                                 
                                 <!-- Suggested Prompts -->
                                 <div class="flex flex-col gap-2 pl-8">
-                                    <button class="text-left px-3 py-2 bg-white border border-primary-100 text-primary-700 rounded-lg text-xs font-medium hover:bg-primary-50 transition-colors">
+                                    <button class="text-left px-3 py-2 bg-slate-100 border border-primary-100 text-primary-700 rounded-lg text-xs font-medium hover:bg-primary-50 transition-colors">
                                         "Can we reduce the budget by ₹5k?"
                                     </button>
-                                    <button class="text-left px-3 py-2 bg-white border border-primary-100 text-primary-700 rounded-lg text-xs font-medium hover:bg-primary-50 transition-colors">
+                                    <button class="text-left px-3 py-2 bg-slate-100 border border-primary-100 text-primary-700 rounded-lg text-xs font-medium hover:bg-primary-50 transition-colors">
                                         "Add one more city to visit"
                                     </button>
-                                    <button class="text-left px-3 py-2 bg-white border border-primary-100 text-primary-700 rounded-lg text-xs font-medium hover:bg-primary-50 transition-colors">
+                                    <button class="text-left px-3 py-2 bg-slate-100 border border-primary-100 text-primary-700 rounded-lg text-xs font-medium hover:bg-primary-50 transition-colors">
                                         "Replace the Uluwatu hotel"
                                     </button>
                                 </div>
                             </div>
                             
                             <!-- Input Area -->
-                            <div class="p-3 bg-white border-t border-slate-200">
+                            <div class="p-3 bg-slate-100 border-t border-slate-200">
                                 <div class="relative flex items-center">
-                                    <input type="text" placeholder="Type a command..." class="w-full pl-4 pr-10 py-2.5 bg-slate-100 border-transparent rounded-full text-sm focus:bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all">
+                                    <input type="text" placeholder="Type a command..." class="w-full pl-4 pr-10 py-2.5 bg-slate-100 border-transparent rounded-full text-sm focus:bg-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all">
                                     <button class="absolute right-2 w-8 h-8 flex items-center justify-center rounded-full bg-primary-600 text-white hover:bg-primary-700 transition-colors">
                                         <i class="fa-solid fa-paper-plane text-xs"></i>
                                     </button>
@@ -809,6 +882,15 @@
             if (window.innerWidth < 768) {
                 closeSidebar();
             }
+
+            // Lazily init / resize the real map when its view becomes visible
+            // (Leaflet can't size itself correctly inside a container that was display:none)
+            if (viewName === 'map') {
+                initExplorerMap();
+                setTimeout(() => {
+                    if (explorerMap) explorerMap.invalidateSize();
+                }, 50);
+            }
         }
 
         // Functions for handling mobile sidebar toggle
@@ -850,9 +932,9 @@
                 btn.addEventListener('click', (e) => {
                     travelerBtns.forEach(b => {
                         b.classList.remove('active', 'border-primary-600', 'bg-primary-50', 'text-primary-700');
-                        b.classList.add('border-slate-100', 'bg-white', 'text-slate-600');
+                        b.classList.add('border-slate-100', 'bg-slate-100', 'text-slate-600');
                     });
-                    e.target.classList.remove('border-slate-100', 'bg-white', 'text-slate-600');
+                    e.target.classList.remove('border-slate-100', 'bg-slate-100', 'text-slate-600');
                     e.target.classList.add('active', 'border-primary-600', 'bg-primary-50', 'text-primary-700');
                 });
             });
@@ -864,9 +946,9 @@
                     const target = e.target;
                     if (target.classList.contains('active')) {
                         target.classList.remove('active', 'border-primary-600', 'bg-primary-50', 'text-primary-700');
-                        target.classList.add('border-slate-100', 'bg-white', 'text-slate-600');
+                        target.classList.add('border-slate-100', 'bg-slate-100', 'text-slate-600');
                     } else {
-                        target.classList.remove('border-slate-100', 'bg-white', 'text-slate-600');
+                        target.classList.remove('border-slate-100', 'bg-slate-100', 'text-slate-600');
                         target.classList.add('active', 'border-primary-600', 'bg-primary-50', 'text-primary-700');
                     }
                 });
@@ -931,7 +1013,7 @@
                 const rating = (4.0 + (country.length % 10) / 10).toFixed(1);
                 
                 const card = `
-                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden group cursor-pointer hover:shadow-md transition-shadow">
+                    <div class="bg-slate-100 rounded-2xl border border-slate-200 shadow-sm overflow-hidden group cursor-pointer hover:shadow-md transition-shadow">
                         <div class="h-48 overflow-hidden relative bg-slate-100">
                             <img src="${imageUrl}" 
                                  alt="${country}" 
@@ -965,61 +1047,325 @@
             }
         }
 
+        // ===================== Explore Map (real OpenStreetMap via Leaflet) =====================
+        let explorerMap = null;
+        let explorerSearchMarker = null;
+
+        // A few popular destinations to show as quick-pick pins when the map first loads
+        const POPULAR_MAP_DESTINATIONS = [
+            { name: 'Paris, France', latitude: 48.8566, longitude: 2.3522 },
+            { name: 'Bali, Indonesia', latitude: -8.4095, longitude: 115.1889 },
+            { name: 'Tokyo, Japan', latitude: 35.6762, longitude: 139.6503 },
+            { name: 'New York, USA', latitude: 40.7128, longitude: -74.0060 },
+            { name: 'Cairo, Egypt', latitude: 30.0444, longitude: 31.2357 },
+            { name: 'Sydney, Australia', latitude: -33.8688, longitude: 151.2093 },
+            { name: 'Rome, Italy', latitude: 41.9028, longitude: 12.4964 },
+            { name: 'Cape Town, South Africa', latitude: -33.9249, longitude: 18.4241 },
+        ];
+
+        function popupHtml(name) {
+            // Escape quotes so the place name is safe to embed inside the inline onclick attribute
+            const safeName = name.replace(/'/g, "\\'");
+            return `
+                <div class="text-sm">
+                    <p class="font-bold text-slate-900 mb-2">${name}</p>
+                    <button onclick="createTripToHere('${safeName}')"
+                        class="w-full bg-primary-600 hover:bg-primary-700 text-white text-xs font-semibold px-3 py-2 rounded-lg transition-colors flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Create Trip to Here
+                    </button>
+                </div>
+            `;
+        }
+
+        function initExplorerMap() {
+            const container = document.getElementById('map-explorer');
+            if (!container || explorerMap) return; // already initialized
+
+            explorerMap = L.map('map-explorer').setView([20, 10], 2);
+
+            // Real OpenStreetMap tiles — free, no API key required
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(explorerMap);
+
+            // Drop a pin for each popular destination, each with a "Create Trip to Here" button
+            POPULAR_MAP_DESTINATIONS.forEach(dest => {
+                L.marker([dest.latitude, dest.longitude])
+                    .addTo(explorerMap)
+                    .bindPopup(popupHtml(dest.name));
+            });
+
+            renderMapQuickPicks();
+
+            // Clicking anywhere on the map drops a pin there too, so any place can become a trip
+            explorerMap.on('click', async (e) => {
+                const { lat, lng } = e.latlng;
+                const marker = L.marker([lat, lng]).addTo(explorerMap)
+                    .bindPopup(`<div class="text-sm"><p class="font-bold text-slate-900 mb-2">Looking up place...</p></div>`)
+                    .openPopup();
+                try {
+                    const name = await reverseGeocode(lat, lng);
+                    marker.setPopupContent(popupHtml(name));
+                } catch (err) {
+                    marker.setPopupContent(popupHtml(`Location (${lat.toFixed(2)}, ${lng.toFixed(2)})`));
+                }
+            });
+        }
+
+        function renderMapQuickPicks() {
+            const wrap = document.getElementById('map-quick-picks');
+            if (!wrap) return;
+            wrap.innerHTML = POPULAR_MAP_DESTINATIONS.map(dest => `
+                <button onclick="flyToDestination('${dest.name.replace(/'/g, "\\'")}', ${dest.latitude}, ${dest.longitude})"
+                    class="px-3 py-1.5 bg-slate-100 border border-slate-200 hover:border-primary-400 hover:text-primary-700 rounded-full text-xs font-medium text-slate-600 transition-colors">
+                    <i class="fa-solid fa-location-dot mr-1 text-primary-500"></i>${dest.name}
+                </button>
+            `).join('');
+        }
+
+        function flyToDestination(name, lat, lon) {
+            if (!explorerMap) return;
+            explorerMap.flyTo([lat, lon], 10, { duration: 1.2 });
+            // Open the matching marker's popup if it exists among the fixed pins
+            explorerMap.eachLayer(layer => {
+                if (layer instanceof L.Marker) {
+                    const ll = layer.getLatLng();
+                    if (Math.abs(ll.lat - lat) < 0.001 && Math.abs(ll.lng - lon) < 0.001) {
+                        layer.openPopup();
+                    }
+                }
+            });
+        }
+
+        // Forward geocode (place name -> lat/lon) using Open-Meteo's free geocoding API
+        async function geocodePlace(query) {
+            const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=1&language=en&format=json`;
+            const res = await fetch(url);
+            if (!res.ok) throw new Error('Geocoding request failed');
+            const data = await res.json();
+            if (!data.results || data.results.length === 0) throw new Error('Place not found');
+            const r = data.results[0];
+            const name = [r.name, r.admin1, r.country].filter(Boolean).filter((v, i, arr) => arr.indexOf(v) === i).join(', ');
+            return { name, latitude: r.latitude, longitude: r.longitude };
+        }
+
+        // Reverse geocode (lat/lon -> place name) using OpenStreetMap's free Nominatim API
+        async function reverseGeocode(lat, lon) {
+            const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10`;
+            const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+            if (!res.ok) throw new Error('Reverse geocoding failed');
+            const data = await res.json();
+            const a = data.address || {};
+            const place = a.city || a.town || a.village || a.county || a.state || data.name;
+            const country = a.country;
+            return [place, country].filter(Boolean).join(', ') || data.display_name || 'Selected location';
+        }
+
+        function showMapSearchError(message) {
+            const el = document.getElementById('map-search-error');
+            if (!el) return;
+            if (!message) { el.classList.add('hidden'); el.textContent = ''; return; }
+            el.textContent = message;
+            el.classList.remove('hidden');
+        }
+
+        async function searchMapPlace() {
+            const input = document.getElementById('map-search-input');
+            const btn = document.getElementById('map-search-btn');
+            if (!input || !explorerMap) return;
+            const query = input.value.trim();
+            if (!query) return;
+
+            showMapSearchError(null);
+            const originalText = btn ? btn.textContent : '';
+            if (btn) { btn.disabled = true; btn.textContent = '...'; }
+
+            try {
+                const place = await geocodePlace(query);
+
+                if (explorerSearchMarker) {
+                    explorerMap.removeLayer(explorerSearchMarker);
+                }
+                explorerSearchMarker = L.marker([place.latitude, place.longitude], {
+                    icon: L.icon({
+                        iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+                        shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+                        iconSize: [25, 41], iconAnchor: [12, 41]
+                    })
+                }).addTo(explorerMap)
+                  .bindPopup(popupHtml(place.name))
+                  .openPopup();
+
+                explorerMap.flyTo([place.latitude, place.longitude], 10, { duration: 1.2 });
+                input.value = '';
+            } catch (e) {
+                console.error('Map place search failed', e);
+                showMapSearchError(`Couldn't find "${query}". Try a different place name.`);
+            } finally {
+                if (btn) { btn.disabled = false; btn.textContent = originalText; }
+            }
+        }
+
+        // "Create Trip to Here" — pre-fills the New Trip form's destination and jumps to it
+        function createTripToHere(destinationName) {
+            const toInput = document.getElementById('trip-to-input');
+            if (toInput) toInput.value = destinationName;
+            switchView('new-trip');
+            if (toInput) toInput.focus();
+        }
+
         // Calendar logic for Dashboard
+        // Trip dates come from the "Next Adventure" card (Oct 24 - Oct 30, 2026).
+        const TRIP_DATE_RANGES = [
+            { year: 2026, month: 9, startDay: 24, endDay: 30 } // month is 0-indexed: 9 = October
+        ];
+
+        const realToday = new Date();
+        let calendarViewMonth = realToday.getMonth();
+        let calendarViewYear = realToday.getFullYear();
+
+        function changeCalendarMonth(delta) {
+            calendarViewMonth += delta;
+            if (calendarViewMonth > 11) { calendarViewMonth = 0; calendarViewYear++; }
+            if (calendarViewMonth < 0) { calendarViewMonth = 11; calendarViewYear--; }
+            renderCalendar();
+        }
+
+        function goToCurrentMonth() {
+            calendarViewMonth = realToday.getMonth();
+            calendarViewYear = realToday.getFullYear();
+            renderCalendar();
+        }
+
+        function isTripDay(year, month, day) {
+            return TRIP_DATE_RANGES.some(r =>
+                r.year === year && r.month === month && day >= r.startDay && day <= r.endDay
+            );
+        }
+
         function renderCalendar() {
             const calendarGrid = document.getElementById('calendar-grid');
             const monthYearText = document.getElementById('month-year-text');
             if (!calendarGrid) return;
-            
-            const date = new Date(); 
-            const currentMonth = date.getMonth();
-            const currentYear = date.getFullYear();
-            const today = date.getDate();
-            
+
+            const currentMonth = calendarViewMonth;
+            const currentYear = calendarViewYear;
+
+            const isCurrentRealMonth = (currentMonth === realToday.getMonth() && currentYear === realToday.getFullYear());
+            const today = realToday.getDate();
+
             const firstDay = new Date(currentYear, currentMonth, 1).getDay();
             const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-            
+
             const monthNames = ["January", "February", "March", "April", "May", "June",
               "July", "August", "September", "October", "November", "December"
             ];
-            
+
             if (monthYearText) {
                 monthYearText.textContent = `${monthNames[currentMonth]} ${currentYear}`;
             }
-            
+
             let html = '';
             const days = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
             days.forEach(day => {
                 html += `<div class="text-xs font-semibold text-slate-400 pb-2">${day}</div>`;
             });
-            
+
             for (let i = 0; i < firstDay; i++) {
                 html += `<div></div>`;
             }
-            
+
             for (let i = 1; i <= daysInMonth; i++) {
                 let classes = "w-8 h-8 flex items-center justify-center rounded-full mx-auto text-sm transition-colors cursor-pointer ";
-                
-                // Highlight logic: 'today' and hardcoded upcoming trip dates (Oct 24-30 2026)
-                if (i === today) {
+
+                // Highlight logic: real 'today' takes priority, then trip date ranges
+                if (isCurrentRealMonth && i === today) {
                     classes += "bg-primary-600 text-white font-bold shadow-sm hover:bg-primary-700";
-                } else if ((currentMonth === 9 && currentYear === 2026) && (i >= 24 && i <= 30)) { 
+                } else if (isTripDay(currentYear, currentMonth, i)) {
                     classes += "bg-primary-100 text-primary-800 font-semibold border border-primary-200 hover:bg-primary-200";
                 } else {
                     classes += "text-slate-700 hover:bg-slate-100";
                 }
-                
+
                 html += `<div><div class="${classes}">${i}</div></div>`;
             }
-            
+
             calendarGrid.innerHTML = html;
         }
 
         // Live Weather Widget logic for Dashboard
+        // Default location matches the "Next Adventure" trip card (Paris, France).
+        let weatherLocation = { name: 'Paris, France', latitude: 48.8566, longitude: 2.3522 };
+
+        function wmoToIconDesc(code) {
+            // Simplified WMO Weather interpretation
+            let icon = 'fa-sun', desc = 'Clear Sky';
+            if (code >= 1 && code <= 3) { icon = 'fa-cloud-sun'; desc = 'Partly Cloudy'; }
+            if (code >= 45 && code <= 48) { icon = 'fa-smog'; desc = 'Foggy'; }
+            if (code >= 51 && code <= 67) { icon = 'fa-cloud-rain'; desc = 'Rain'; }
+            if (code >= 71 && code <= 82) { icon = 'fa-snowflake'; desc = 'Snow'; }
+            if (code >= 95) { icon = 'fa-cloud-bolt'; desc = 'Thunderstorm'; }
+            return { icon, desc };
+        }
+
+        function showWeatherError(message) {
+            const errorEl = document.getElementById('weather-error');
+            if (!errorEl) return;
+            if (!message) {
+                errorEl.classList.add('hidden');
+                errorEl.textContent = '';
+                return;
+            }
+            errorEl.textContent = message;
+            errorEl.classList.remove('hidden');
+        }
+
+        // Look up a city name -> lat/lon using Open-Meteo's free geocoding API (no key needed)
+        async function geocodeCity(query) {
+            const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=1&language=en&format=json`;
+            const res = await fetch(url);
+            if (!res.ok) throw new Error('Geocoding request failed');
+            const data = await res.json();
+            if (!data.results || data.results.length === 0) {
+                throw new Error('City not found');
+            }
+            const r = data.results[0];
+            const name = [r.name, r.admin1, r.country].filter(Boolean).filter((v, i, arr) => arr.indexOf(v) === i).join(', ');
+            return { name, latitude: r.latitude, longitude: r.longitude };
+        }
+
+        async function searchWeatherCity() {
+            const input = document.getElementById('weather-city-input');
+            const btn = document.getElementById('weather-search-btn');
+            if (!input) return;
+            const query = input.value.trim();
+            if (!query) return;
+
+            showWeatherError(null);
+            const originalBtnText = btn ? btn.textContent : '';
+            if (btn) { btn.disabled = true; btn.textContent = '...'; }
+
+            try {
+                const loc = await geocodeCity(query);
+                weatherLocation = loc;
+                input.value = '';
+                await renderWeather();
+            } catch (e) {
+                console.error('City search failed', e);
+                showWeatherError(`Couldn't find "${query}". Try a different city name.`);
+            } finally {
+                if (btn) { btn.disabled = false; btn.textContent = originalBtnText; }
+            }
+        }
+
         async function renderWeather() {
             const weatherContent = document.getElementById('weather-content');
+            const cityNameEl = document.getElementById('weather-city-name');
             if (!weatherContent) return;
-            
+
+            if (cityNameEl) cityNameEl.textContent = weatherLocation.name;
+
             weatherContent.innerHTML = `
                 <div class="flex items-center gap-4 mb-6">
                     <i class="fa-solid fa-circle-notch fa-spin text-3xl"></i>
@@ -1028,26 +1374,21 @@
             `;
 
             try {
-                // Fetch real weather data for Paris from Open-Meteo (No API key needed)
-                const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=48.8566&longitude=2.3522&current_weather=true&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=auto');
+                // Fetch real, live weather data from Open-Meteo (free, no API key needed)
+                const { latitude, longitude } = weatherLocation;
+                const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=auto`;
+                const res = await fetch(url);
+                if (!res.ok) throw new Error('Weather request failed');
                 const data = await res.json();
-                
+
                 const currentTemp = Math.round(data.current_weather.temperature);
                 const code = data.current_weather.weathercode;
-                
-                // Simplified WMO Weather interpretation
-                let icon = 'fa-sun';
-                let desc = 'Clear Sky';
-                if (code >= 1 && code <= 3) { icon = 'fa-cloud-sun'; desc = 'Partly Cloudy'; }
-                if (code >= 45 && code <= 48) { icon = 'fa-smog'; desc = 'Foggy'; }
-                if (code >= 51 && code <= 67) { icon = 'fa-cloud-rain'; desc = 'Rain'; }
-                if (code >= 71 && code <= 82) { icon = 'fa-snowflake'; desc = 'Snow'; }
-                if (code >= 95) { icon = 'fa-cloud-bolt'; desc = 'Thunderstorm'; }
+                const { icon, desc } = wmoToIconDesc(code);
 
-                // Build tomorrow and day after small forecasts
+                // Build tomorrow and day-after mini forecasts
                 const maxT1 = Math.round(data.daily.temperature_2m_max[1]);
                 const maxT2 = Math.round(data.daily.temperature_2m_max[2]);
-                
+
                 const date1 = new Date(data.daily.time[1]).toLocaleDateString('en-US', { weekday: 'short' });
                 const date2 = new Date(data.daily.time[2]).toLocaleDateString('en-US', { weekday: 'short' });
 
@@ -1061,7 +1402,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="grid grid-cols-2 gap-2 border-t border-white/20 pt-3">
                         <div class="text-center">
                             <p class="text-xs text-blue-100 mb-1">${date1}</p>
@@ -1075,18 +1416,18 @@
                 `;
             } catch (e) {
                 console.error('Weather fetch failed', e);
-                // Graceful fallback if API fails
+                // Graceful fallback if API fails or is unreachable
                 weatherContent.innerHTML = `
                     <div class="flex items-center justify-between mb-6">
                         <div class="flex items-center gap-4">
                             <i class="fa-solid fa-cloud-sun text-5xl drop-shadow-md"></i>
                             <div>
-                                <div class="text-4xl font-bold tracking-tighter">18°C</div>
-                                <div class="text-blue-100 font-medium">Partly Cloudy</div>
+                                <div class="text-4xl font-bold tracking-tighter">--°C</div>
+                                <div class="text-blue-100 font-medium">Unavailable</div>
                             </div>
                         </div>
                     </div>
-                    <p class="text-xs text-blue-200 mt-2 text-center bg-white/10 py-1 rounded">Offline Mode</p>
+                    <p class="text-xs text-blue-200 mt-2 text-center bg-white/10 py-1 rounded">Couldn't reach weather service. Tap refresh to retry.</p>
                 `;
             }
         }
@@ -1103,6 +1444,24 @@
             if (searchInput) {
                 searchInput.addEventListener('input', (e) => {
                     renderDestinations(e.target.value);
+                });
+            }
+
+            // Setup weather city search
+            const weatherForm = document.getElementById('weather-search-form');
+            if (weatherForm) {
+                weatherForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    searchWeatherCity();
+                });
+            }
+
+            // Setup Explore Map place search
+            const mapForm = document.getElementById('map-search-form');
+            if (mapForm) {
+                mapForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    searchMapPlace();
                 });
             }
         });
