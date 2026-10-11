@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wanderlust - Login & Signup</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Custom styles for animations and font */
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* Prevent scrolling caused by absolute positioning */
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Glassmorphism input autofill override for WebKit */
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover, 
+        input:-webkit-autofill:focus, 
+        input:-webkit-autofill:active {
+            transition: background-color 5000s ease-in-out 0s;
+            -webkit-text-fill-color: white !important;
+        }
+
+        .success-checkmark {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: block;
+            stroke-width: 4;
+            stroke: #4ade80; /* Tailwind green-400 */
+            stroke-miterlimit: 10;
+            margin: 0 auto;
+            box-shadow: inset 0px 0px 0px #4ade80;
+            animation: fill .4s ease-in-out .4s forwards, scale .3s ease-in-out .9s both;
+        }
+
+        .success-checkmark__circle {
+            stroke-dasharray: 166;
+            stroke-dashoffset: 166;
+            stroke-width: 4;
+            stroke-miterlimit: 10;
+            stroke: #4ade80;
+            fill: none;
+            animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+        }
+
+        .success-checkmark__check {
+            transform-origin: 50% 50%;
+            stroke-dasharray: 48;
+            stroke-dashoffset: 48;
+            animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+        }
+
+        @keyframes stroke {
+            100% { stroke-dashoffset: 0; }
+        }
+        @keyframes scale {
+            0%, 100% { transform: none; }
+            50% { transform: scale3d(1.1, 1.1, 1); }
+        }
+        @keyframes fill {
+            100% { box-shadow: inset 0px 0px 0px 40px rgba(74, 222, 128, 0.2); }
+        }
+
+        .animate-fade-up-delayed {
+            opacity: 0;
+            transform: translateY(15px);
+            animation: fadeUpText 0.5s ease-out 1.2s forwards;
+        }
+
+        @keyframes fadeUpText {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body class="relative h-screen w-full bg-gray-900 text-white">
+
+    <!-- Fullscreen Video Background -->
+    <video id="bg-video" autoplay muted playsinline class="absolute inset-0 w-full h-full object-cover z-0 pointer-events-none transition-opacity duration-1000 ease-in-out opacity-100">
+        <source src="https://storage.googleapis.com/coverr-main/mp4/Palm_Trees.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+
+    <!-- Dark Overlay to ensure text readability & contrast for the Globe -->
+    <div class="absolute inset-0 bg-black/60 z-10 pointer-events-none"></div>
+
+    <!-- Main Content Container (Split Layout) -->
+    <div class="relative z-20 w-full h-full flex flex-col lg:flex-row items-center justify-center max-w-[1400px] mx-auto px-4 sm:px-8">
+        
+        <!-- LEFT SIDE: Interactive Globe -->
+        <div class="hidden lg:flex flex-1 w-full h-full items-center justify-center relative cursor-move">
+            <!-- Container needs to take up space to give canvas dimensions -->
+            <div class="w-full h-[600px] xl:h-[800px] relative">
+                <canvas id="globe-canvas" class="absolute inset-0 w-full h-full block touch-none select-none"></canvas>
+            </div>
+            
+            <div class="absolute bottom-12 left-12 pointer-events-none">
+                <h1 class="text-4xl xl:text-6xl font-bold tracking-tight mb-2 drop-shadow-lg">Wanderlust</h1>
+                <p class="text-white/60 text-lg tracking-wide uppercase font-light">Explore every coordinate.</p>
+            </div>
+        </div>
+
+        <!-- RIGHT SIDE: Glassmorphism Forms -->
+        <div class="w-full max-w-md p-6 sm:p-8 m-4 backdrop-blur-xl bg-white/10 border border-white/20 shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] rounded-3xl shrink-0 lg:ml-8">
+            
+            <!-- LOGIN FORM -->
+            <div id="login-section" class="fade-in block">
+                <div class="text-center mb-8">
+                    <h2 class="text-3xl font-bold mb-2">Welcome Back</h2>
+                    <p class="text-white/70 text-sm">Discover your next adventure</p>
+                </div>
+
+                <form onsubmit="handleSuccess(event);" class="space-y-5">
+                    <div>
+                        <label for="login-email" class="block text-sm font-medium mb-1.5 text-white/90">Email Address</label>
+                        <div class="relative">
+                            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/50" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"></path></svg>
+                            <input type="email" id="login-email" required placeholder="explorer@travel.com" 
+                                class="w-full bg-black/20 border border-white/10 rounded-xl pl-10 pr-4 py-3 outline-none focus:border-white/50 focus:bg-black/40 transition-all text-white placeholder-white/40">
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between items-center mb-1.5">
+                            <label for="login-password" class="block text-sm font-medium text-white/90">Password</label>
+                            <a href="#" class="text-xs text-white/70 hover:text-white transition-colors">Forgot password?</a>
+                        </div>
+                        <div class="relative">
+                            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/50" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                            <input type="password" id="login-password" required placeholder="••••••••" 
+                                class="w-full bg-black/20 border border-white/10 rounded-xl pl-10 pr-4 py-3 outline-none focus:border-white/50 focus:bg-black/40 transition-all text-white placeholder-white/40">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full bg-white text-black font-semibold rounded-xl px-4 py-3.5 hover:bg-gray-100 active:scale-[0.98] transition-all mt-6 shadow-lg">
+                        Log In
+                    </button>
+                </form>
+
+                <p class="text-center mt-8 text-sm text-white/70">
+                    Don't have an account? 
+                    <button type="button" onclick="toggleForms('signup')" class="text-white font-semibold hover:underline focus:outline-none">Sign up</button>
+                </p>
+            </div>
+
+            <!-- SIGNUP FORM -->
+            <div id="signup-section" class="fade-in hidden">
+                <div class="text-center mb-6">
+                    <h2 class="text-3xl font-bold mb-2">Join the Journey</h2>
+                    <p class="text-white/70 text-sm">Create an account to start exploring</p>
+                </div>
+
+                <form onsubmit="handleSuccess(event);" class="space-y-4">
+                    <div>
+                        <label for="signup-name" class="block text-sm font-medium mb-1.5 text-white/90">Full Name</label>
+                        <div class="relative">
+                            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/50" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                            <input type="text" id="signup-name" required placeholder="John Doe" 
+                                class="w-full bg-black/20 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 outline-none focus:border-white/50 focus:bg-black/40 transition-all text-white placeholder-white/40">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="signup-email" class="block text-sm font-medium mb-1.5 text-white/90">Email Address</label>
+                        <div class="relative">
+                            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/50" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"></path></svg>
+                            <input type="email" id="signup-email" required placeholder="explorer@travel.com" 
+                                class="w-full bg-black/20 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 outline-none focus:border-white/50 focus:bg-black/40 transition-all text-white placeholder-white/40">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="signup-password" class="block text-sm font-medium mb-1.5 text-white/90">Password</label>
+                        <div class="relative">
+                            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/50" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                            <input type="password" id="signup-password" required placeholder="••••••••" 
+                                class="w-full bg-black/20 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 outline-none focus:border-white/50 focus:bg-black/40 transition-all text-white placeholder-white/40">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full bg-white text-black font-semibold rounded-xl px-4 py-3.5 hover:bg-gray-100 active:scale-[0.98] transition-all mt-6 shadow-lg">
+                        Create Account
+                    </button>
+                </form>
+
+                <p class="text-center mt-6 text-sm text-white/70">
+                    Already have an account? 
+                    <button type="button" onclick="toggleForms('login')" class="text-white font-semibold hover:underline focus:outline-none">Log in</button>
+                </p>
+            </div>
+
+            <!-- SUCCESS ANIMATION SECTION -->
+            <div id="success-section" class="hidden py-12 text-center">
+                <svg class="success-checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                    <circle class="success-checkmark__circle" cx="26" cy="26" r="25" fill="none"/>
+                    <path class="success-checkmark__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+                </svg>
+                <h3 class="text-2xl font-bold mt-8 text-white animate-fade-up-delayed">You're all set!</h3>
+                <p class="text-white/70 text-sm mt-2 animate-fade-up-delayed" style="animation-delay: 1.4s;">Redirecting to dashboard...</p>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // --- Video Background Logic ---
+        const bgVideo = document.getElementById('bg-video');
+        const videoSources = [
+            "https://storage.googleapis.com/coverr-main/mp4/Palm_Trees.mp4",
+            "https://storage.googleapis.com/coverr-main/mp4/Mt_Baker.mp4",
+            "https://storage.googleapis.com/coverr-main/mp4/Surfing-the-waves.mp4",
+            "https://storage.googleapis.com/coverr-main/mp4/Winter-Boke.mp4"
+        ];
+        let currentVideoIndex = 0;
+
+        function cycleVideo() {
+            bgVideo.classList.remove('opacity-100');
+            bgVideo.classList.add('opacity-0');
+
+            setTimeout(() => {
+                currentVideoIndex = (currentVideoIndex + 1) % videoSources.length;
+                bgVideo.src = videoSources[currentVideoIndex];
+                bgVideo.load();
+                
+                bgVideo.play().then(() => {
+                    bgVideo.classList.remove('opacity-0');
+                    bgVideo.classList.add('opacity-100');
+                }).catch(e => {
+                    setTimeout(cycleVideo, 1000);
+                });
+            }, 1000); 
+        }
+
+        setInterval(cycleVideo, 8000);
+        bgVideo.addEventListener('ended', cycleVideo);
+        bgVideo.addEventListener('error', cycleVideo);
+
+        // --- Form UI Logic ---
+        function toggleForms(target) {
+            const loginSection = document.getElementById('login-section');
+            const signupSection = document.getElementById('signup-section');
+
+            loginSection.classList.remove('fade-in');
+            signupSection.classList.remove('fade-in');
+            void loginSection.offsetWidth; 
+            void signupSection.offsetWidth; 
+
+            if (target === 'signup') {
+                loginSection.classList.add('hidden');
+                loginSection.classList.remove('block');
+                signupSection.classList.remove('hidden');
+                signupSection.classList.add('block', 'fade-in');
+            } else {
+                signupSection.classList.add('hidden');
+                signupSection.classList.remove('block');
+                loginSection.classList.remove('hidden');
+                loginSection.classList.add('block', 'fade-in');
+            }
+        }
+
+        function handleSuccess(event) {
+            event.preventDefault();
+            const loginSection = document.getElementById('login-section');
+            const signupSection = document.getElementById('signup-section');
+            const successSection = document.getElementById('success-section');
+
+            loginSection.classList.add('hidden');
+            loginSection.classList.remove('block');
+            signupSection.classList.add('hidden');
+            signupSection.classList.remove('block');
+
+            successSection.classList.remove('hidden');
+            successSection.classList.add('block', 'fade-in');
+        }
+
+        const LAND_B64 = 
+            "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" +
+            "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" +
+            "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPcBAOD/HwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACA" +
+            "//+P//f/LwgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD4/v/4/////wcAAAAEAPABAAAAfAAAAAAAAAAAAAAAAAAAAADg9w/4" +
+            "/////wEAAP4AAAAAAAAA+AAAAAAAAAAAAAAAAAAAAIAG+Of//////wAAAHwGAAAAAAAAAAMAAAAAAAAAAAAAAACABwAc/4P/////" +
+            "/wAAADAAAAAAQAAAAD4AAAAAAAAAAAAAAAAAfMbDcQAA/v///wAAAAAAAADABwAA//8HAMAPAAAAAAAAAABgAAAAAAAA/P///wAA" +
+            "AAAAAABwAADg//8AAAAAAAAAAAAAAADwG457dwcA8P//HwAAAAAAAAAYAAD///9/eAAAAAAAAAAAAAD4/g0H/w8A8P//PwAAAAAA" +
+            "AAAOgOv/////fwD/AAAAAAA/AAAA/B84/v8A8P//LwAAAAD4AAAA4PP//////////wAAAOD///H/+D/3cPgDoP//DwAAAID/BwAA" +
+            "x/v/////////P4AA/P///////////////////////w8AAOcBAAgAAAAAAAAAAAAAgP///////////////////////wcAACYAAAQA" +
+            "AAAAAAAAAAAAgf///////////////////////wMM8AAAAAAAAAAAAAAAAAAAIID/////////e+wPwH8AgA8AAP/5z///////////" +
+            "//////8/ANH///////9/AIALgD8AAAAAwH/+//////////////////9/APj///////8fADwAAD8AAAAA8D/+////////////////" +
+            "//sPAPC/+f////8fAPwAADgAAAAA8D/+////////////////D/wBAMCfAP////8PAPwYAAAAAAAA8H/4//////////////9/DgcA" +
+            "AAAcAOD///8/APw/AAAAAAAQAB7w//////////////8BgAMAAAACAMD/////Afh/AAAAAAA4gBz+/////////////38A4AMAAMAA" +
+            "AMD/////B/z/AAAAAABwwAb+/////////////x8A8AEAAAAAAAD/////P///AwAAAADmgOH//////////////z8A4AAAAAAAAAD+" +
+            "////P/7/BwAAAAD28P////////////////8D4AAAAAAAAAD8////f/7/BwAAAADz+f////////////////8HIAAAAAAAAAD6////" +
+            "////BAAAAABw/v////////////////8EAAAAAAAAAADo//////8jHgAAAACA//////////////////8MAAAAAAAAAADQ//////8O" +
+            "PgAAAADw//////////////////8AAAAAAAAAAADg//////+PIAAAAADA////v////////////38EAAAAAAAAAADg////////AAAA" +
+            "AACA//v/zD/8/////////z8AAAAAAAAAAADg//////8bAAAAAACA//N/gD///////////x8GAAAAAAAAAADw//////8AAAAAAAD+" +
+            "B8c/AD/+/////////wcPAAAAAAAAAADg//////8AAAAAAAD+gx4/DH74/////////wABAAAAAAAAAADg/////x8AAAAAAAD+gbCn" +
+            "///8////////fQABAAAAAAAAAADg/////w8AAAAAAAD/gCDn///4//////9/MgADAAAAAAAAAADA/////w8AAAAAAAD+AADm/3/4" +
+            "//////8/cIABAAAAAAAAAADA/////wcAAAAAAAA44AHC///5////////4+ABAAAAAAAAAACA/////wcAAAAAAACI/wEA4P//////" +
+            "////4OgAAAAAAAAAAAAA/////wMAAAAAAAD4/wAA4P//////////ADYAAAAAAAAAAAAA/P///wEAAAAAAAD+/wEA8P//////////" +
+            "AQcAAAAAAAAAAAAA+P//fwAAAAAAAAD//w8P8P//////////AQEAAAAAAAAAAAAAyP//fwAAAAAAAAD//3//////////////AQAA" +
+            "AAAAAAAAAAAA0P+PYQAAAAAAAAD//////z//////////AwAAAAAAAAAAAAAAoP8HwAAAAAAAAMD/////83/+////////AQAAAAAA" +
+            "AAAAAAAAIP8DwAAAAAAAAOD/////5//I////////AAAAAAAAAAAAAAAAQP4DgAAAAAAAAPD/////z/+A////////AAAAAAAAAAAA" +
+            "AAAAAPwDAAIAAAAAAPD/////z/8ZwP////9/AQAAAAAAAAAAAAAAAPgDQAAAAAAAAPj/////j/9/gP////8fAQAAAAAAAAAAAAAA" +
+            "APADEAMAAAAAAPz/////v///AP9//P8DAAAAAAAAAAAAAAAAAPADAwwAAAAAAPj/////P/9/APw//B8AAAAAAAAAAAAIAAAAAPCH" +
+            "A8AAAAAAAPj/////P/4/APwP+J8BAAAAAAAAAAAAAAAAAMD/A0YEAAAAAPj/////f/4fAPwH+B8AAwAAAAAAAAAAAAAAAAD/AQAA" +
+            "AAAAAPj/////f/wHAPgD8D8AAwAAAAAAAAAAAAAAAADgHwAAAAAAAPj///////wDAPgAwH8AAQAAAAAAAAAAAAAAAADAHwAAAAAA" +
+            "APz//////30AAPAAwH8AAAAAAAAAAAAAAAAAAAAAHAAAAAAAAPj//////wsAAPAAgH4AAQAAAAAAAAAAAAAAAAAAGEAAAAAAAPj/" +
+            "/////wMBAPAAgHwAAAAAAAAAAAAAAAAAAAAAGPAhAAAAAPD///////cBAOAAgDiABAAAAAAAAAAAAAAAAAAAIPl/AAAAAOD/////" +
+            "//8AAGABABBAFAAAAAAAAAAAAAAAAAAAgP7/AQAAAMD///////8AAAABgAAAHAAAAAAAAAAAAAAAAAAAAPz/AQAAAID///////8A" +
+            "AAABAAEgCAAAAAAAAAAAAAAAAAAAAPz/HwAAAAD/8P///38AAAAAAANgAAAAAAAAAAAAAAAAAAAAAPz/fwAAAAAAoP///z8AAAAA" +
+            "YAd4AAAAAAAAAAAAAAAAAAAAAPz/fwAAAAAAAP///x8AAAAAwAY8AAAAAAAAAAAAAAAAAAAAAP7//wAAAAAAAP///w8AAAAAgAc+" +
+            "AAAAAAAAAAAAAAAAAAAAAP///wAAAAAAAP///wcAAAAAgIM/TwAAAAAAAAAAAAAAAAAAAP///wEAAAAAgP///wMAAAAAAIc/QAQA" +
+            "AAAAAAAAAAAAAAAAgP///w8AAAAAgP///wEAAAAAAA6fAUQAAAAAAAAAAAAAAAAAAP////8AAAAAAP///wAAAAAAAB6ewuwDAgAA" +
+            "AAAAAAAAAAAAgP////8DAAAAAP7//wAAAAAAABwAAvAPAgAAAAAAAAAAAAAAgP////8PAAAAAPz/fwAAAAAAABAAAMCfAQAAAAAA" +
+            "AAAAAAAAAP////8PAAAAAPz//wAAAAAAAOADAIA/MAAAAAAAAAAAAAAAAP7///8PAAAAAPz/fwAAAAAAAAAPAMBngAAAAAAAAAAA" +
+            "AAAAAP7///8PAAAAAPz//wAAAAAAAAAACABAAAAAAAAAAAAAAAAAAPz///8HAAAAAPj//wAAAAAAAAAAAAAAAAIAAAAAAAAAAAAA" +
+            "APz///8DAAAAAPj//wAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAPj///8BAAAAAPz//4AAAAAAAAAAAB8GAAAAAAAAAAAAAAAAAPj/" +
+            "//8BAAAAAPz//8EAAAAAAAAAIB8OAAAAAAAAAAAAAAAAAPD///8BAAAAAP7//+AAAAAAAAAA+B8OACAAAAAAAAAAAAAAAMD///8B" +
+            "AAAAAP7/f/gAAAAAAAAA/H8eAAAAAAAAAAAAAAAAAID///8AAAAAAP7/H/gAAAAAAAAA/P8fAABAAAAAAAAAAAAAAAD///8AAAAA" +
+            "APz/D3AAAAAAAAAA/v8/AAAAAAAAAAAAAAAAAAD///8AAAAAAPj/D3gAAAAAAADA//9/AAgAAAAAAAAAAAAAAAD//38AAAAAAPj/" +
+            "DzgAAAAAAADw////AAAAAAAAAAAAAAAAAAD//x8AAAAAAPD/DzgAAAAAAAD4////AQAAAAAAAAAAAAAAAAD//wMAAAAAAPD/DzgA" +
+            "AAAAAAD4////AwAAAAAAAAAAAAAAAID//wEAAAAAAPD/AwAAAAAAAAD4////AwAAAAAAAAAAAAAAAID//wEAAAAAAPD/AwAAAAAA" +
+            "AAD4////BwAAAAAAAAAAAAAAAID//wEAAAAAAOD/AwAAAAAAAAD4////BwAAAAAAAAAAAAAAAID//wAAAAAAAOD/AQAAAAAAAADw" +
+            "////BwAAAAAAAAAAAAAAAID//wAAAAAAAMD/AAAAAAAAAADw////AwAAAAAAAAAAAAAAAID/fwAAAAAAAIB/AAAAAAAAAADgf/z/" +
+            "AwAAAAAAAAAAAAAAAID/PwAAAAAAAIA/AAAAAAAAAADgB/D/AQAAAAAAAAAAAAAAAMD/HQAAAAAAAIABAAAAAAAAAADwAND/AQAA" +
+            "AAAAAAAAAAAAAMD/AwAAAAAAAAAAAAAAAAAAAAAAAID/AAAIAAAAAAAAAAAAAMD/BwAAAAAAAAAAAAAAAAAAAAAAAAD/AAAQAAAA" +
+            "AAAAAAAAAOD/AwAAAAAAAAAAAAAAAAAAAAAAAAA+AABwAAAAAAAAAAAAAOA/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA4AAAAAAAA" +
+            "AAAAAOA/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAOAPAAAAAAAAAAAAAAAAAAAAAAAAAABwAAAGAAAAAAAAAAAA" +
+            "AMAPAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAADAAAAAAAAAAAAAPAPAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMABAAAAAAAAAAAAAPAD" +
+            "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAOABAAAAAAAAAAAAAPAHAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPAHAAAA" +
+            "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPADAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAPABAAAAAAAA" +
+            "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPCBAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGABAAAAAAAAAAAA" +
+            "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAHAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" +
+            "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" +
+            "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" +
+            "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" +
+            "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAA" +
+            "AAAAAAAAAAAAAAAcAAAAAAAAAAAAAAA+AABAAJ8//j8PAAAAAAAAAAAAAAAAAAAMAAAAAAAAAAAAAPD/fwD///////8/AAAAAAAA" +
+            "AAAAAAAAAIA+AAAAAAAAAAAAPP///8D/////////HwAAAAAAAAAAAAAAAIA9AAAAAAAA8Pz/////P/j//////////wMAAAAAAAAA" +
+            "AMAAAPB9AAAAAID/////////P/7///////////8BAAAAAAAAAOABAwB/AAAAAPD///////////////////////8AAAAAAFACPoD/" +
+            "//9/AAAAAPD//////////////////////x8AAAAA+P////////8HAAAAAP///////////////////////wcAAAAA/v///////wMA" +
+            "AAAA/v///////////////////////wcAAAD8/////////w8AAA7w/////////////////////////w8AAMAB/////////wMAgB84" +
+            "/////////////////////////wEAAAAA/P///////3/w4AcA/////////////////////////wAAAADg//////////8/gM//////" +
+            "/////////////////////wMAAADg/////////////f///////////////////////////z8A7wMA/v//////////////////////" +
+            "//////////////////8/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" +
+            "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" +
+            "AAAAAAAAAAAA";
+
+        const MAX_DPR = 2;
+        const FACE = '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif';
+        const QA = Math.PI / 36;
+        const MW = 288;
+        const MH = 144;
+
+        function num(v, fb) { return typeof v === "number" && isFinite(v) ? v : fb; }
+        function clampN(v, lo, hi) { return v < lo ? lo : v > hi ? hi : v; }
+
+        function parseRGB(input, fb) {
+            if (!input) return fb;
+            const str = String(input).trim();
+            if (str.charAt(0) === "#") {
+                let hex = str.slice(1);
+                if (hex.length === 3 || hex.length === 4) {
+                    hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+                }
+                if (hex.length >= 6) {
+                    const r = parseInt(hex.slice(0, 2), 16);
+                    const g = parseInt(hex.slice(2, 4), 16);
+                    const b = parseInt(hex.slice(4, 6), 16);
+                    if (!isNaN(r) && !isNaN(g) && !isNaN(b)) return [r, g, b];
+                }
+                return fb;
+            }
+            const m = str.match(/[\d.]+/g);
+            if (m && m.length >= 3) return [+m[0], +m[1], +m[2]];
+            return fb;
+        }
+
+        function initGlobe(canvasId) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+            const ctx = canvas.getContext("2d");
+            if (!ctx) return;
+
+            // Config mimicking the React props & refs
+            const v = {
+                base: "#E2E4E9",
+                phrase: "everypointonthisballisapathbacktoanotherone",
+                density: 0.53, // 53 / 100
+                glyphSize: 0.90, // 90 / 100
+                speed: 2.0, // 100 / 50
+                hover: 1.0, // 100 / 100
+                radius: 1.0, // 100 / 100
+                drift: 2.1, // 210 / 100
+                letters: 1.0, // 100 / 100
+                zoom: 1.0, // 100 / 100
+                light: 1.0, // 100 / 100
+                pins: 7
+            };
+
+            const sizeRef = { w: 0, h: 0 };
+            const ptr = { on: 0, x: -1e9, y: -1e9, dragging: 0, dx: 0, dy: 0, moved: 0, click: 0 };
+
+            // Decode land mapping
+            let land = null;
+            try {
+                const bin = atob(LAND_B64);
+                land = new Uint8Array(bin.length);
+                for (let i = 0; i < bin.length; i++) land[i] = bin.charCodeAt(i);
+            } catch (e) {
+                land = null;
+            }
+
+            const isLand = (lon, lat) => {
+                if (!land) return false;
+                const gx = Math.floor(((lon + 180) / 360) * MW);
+                const gy = Math.floor(((90 - lat) / 180) * MH);
+                if (gx < 0 || gx >= MW || gy < 0 || gy >= MH) return false;
+                const b = gy * MW + gx;
+                return ((land[b >> 3] >> (b & 7)) & 1) === 1;
+            };
+
+            let nodes = [];
+            let builtKey = "";
+
+            const build = (dens, letterK, text) => {
+                const step = 3.05 / dens;
+                nodes = [];
+                let k = 0;
+                let run = 0;
+                let sea3 = 0;
+                const every = letterK <= 0 ? 0 : Math.max(1, Math.round(2 / letterK));
+                for (let lat = -86; lat <= 86; lat += step) {
+                    const rl = Math.cos((lat * Math.PI) / 180);
+                    const n = Math.max(1, Math.round(98 * dens * rl));
+                    for (let i = 0; i < n; i++) {
+                        const lon = -180 + (360 * i) / n;
+                        const l = isLand(lon, lat);
+                        if (!l && sea3++ % 2) continue;
+                        let letter = "";
+                        if (l && every && run++ % every === 0) letter = text.charAt(k++ % text.length);
+                        nodes.push({ lat: (lat * Math.PI) / 180, lon: (lon * Math.PI) / 180, land: l, c: letter });
+                    }
+                }
+                builtKey = dens + "|" + letterK + "|" + text;
+            };
+
+            const pins = [];
+            const view = { cx: 0, cy: 0, R: 1, cs: 1, sn: 0, ct: 1, st: 0 };
+
+            const unproject = (px, py) => {
+                const x1 = (px - view.cx) / view.R;
+                const y2 = (view.cy - py) / view.R;
+                const q = 1 - x1 * x1 - y2 * y2;
+                if (q <= 0.002) return null;
+                const z2 = Math.sqrt(q);
+                const y0 = y2 * view.ct + z2 * view.st;
+                const z1 = -y2 * view.st + z2 * view.ct;
+                const x0 = x1 * view.cs + z1 * view.sn;
+                const z0 = -x1 * view.sn + z1 * view.cs;
+                return { lat: Math.asin(clampN(y0, -1, 1)), lon: Math.atan2(z0, x0) };
+            };
+
+            let raf = 0;
+            let last = performance.now();
+            let clock = 0;
+            let spin = 2.1;
+            let vel = 0.16;
+            let tilt = -0.36;
+            let vtilt = 0;
+            let zoom = 1;
+            let zoomT = 1;
+            let seenClick = 0;
+            const sea = [];
+            const soil = [];
+            const land8 = [];
+
+            const render = (now) => {
+                const dt = Math.min(0.05, (now - last) / 1000);
+                last = now;
+                const sp = v.speed;
+                clock += dt * sp;
+
+                const dpr = Math.min(window.devicePixelRatio || 1, MAX_DPR);
+                const cw = sizeRef.w || canvas.clientWidth || 1200;
+                const ch = sizeRef.h || canvas.clientHeight || 800;
+                const bw = Math.max(1, Math.round(cw * dpr));
+                const bh = Math.max(1, Math.round(ch * dpr));
+                if (canvas.width !== bw || canvas.height !== bh) {
+                    canvas.width = bw;
+                    canvas.height = bh;
+                }
+
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                ctx.clearRect(0, 0, cw, ch); // Keeps background transparent for video!
+
+                const key = v.density + "|" + v.letters + "|" + v.phrase;
+                if (key !== builtKey) build(v.density, v.letters, v.phrase);
+
+                const u = Math.min(cw, ch);
+                const hv = v.hover * (ptr.on ? 1 : 0);
+
+                zoom += (zoomT - zoom) * Math.min(1, dt / 0.18);
+
+                const cx = cw / 2;
+                const cy = ch / 2 + u * 0.035;
+                const R = u * 0.318 * zoom * v.radius;
+                const fs = u * 0.0275 * Math.pow(zoom, 0.72) * v.glyphSize;
+
+                if (ptr.dragging) {
+                    const dspin = (ptr.dx * u) / R;
+                    const dtilt = (-ptr.dy * u) / R;
+                    ptr.dx = 0;
+                    ptr.dy = 0;
+                    spin += dspin;
+                    tilt = clampN(tilt + dtilt, -1.15, 1.15);
+
+                    const k = Math.min(1, dt / 0.07);
+                    const inv = 1 / Math.max(dt, 1 / 240);
+                    vel += (clampN(dspin * inv, -9, 9) - vel) * k;
+                    vtilt += (clampN(dtilt * inv, -9, 9) - vtilt) * k;
+                } else {
+                    const idle = 0.16 * v.drift * (hv > 0 ? 0.28 : 1);
+                    vel += (idle - vel) * Math.min(1, (dt * sp) / 0.9);
+                    vtilt *= Math.exp(-dt * sp * 6.6);
+                    tilt = clampN(tilt + vtilt * dt * sp, -1.15, 1.15);
+                    tilt += (-0.36 - tilt) * Math.min(1, (dt * sp) / 4);
+                    spin += vel * dt * sp;
+                }
+
+                if (ptr.click !== seenClick) {
+                    seenClick = ptr.click;
+                    const g = unproject(ptr.x, ptr.y);
+                    const cap = v.pins;
+                    if (g && cap > 0) {
+                        pins.push({ lat: g.lat, lon: g.lon, t: clock });
+                        while (pins.length > cap) pins.shift();
+                    }
+                }
+
+                const cs = Math.cos(spin);
+                const sn = Math.sin(spin);
+                const ct = Math.cos(tilt);
+                const st = Math.sin(tilt);
+                view.cx = cx; view.cy = cy; view.R = R;
+                view.cs = cs; view.sn = sn; view.ct = ct; view.st = st;
+
+                const lightK = v.light * hv;
+                const lx = lightK > 0 && !ptr.dragging ? ptr.x : -1e9;
+                const ly = lightK > 0 && !ptr.dragging ? ptr.y : -1e9;
+                const lr = u * 0.2;
+                const lr2 = lr * lr;
+
+                const ink = parseRGB(v.base, [226, 228, 233]);
+                const rgb = ink[0] + "," + ink[1] + "," + ink[2];
+                const tone = (a) => "rgba(" + rgb + "," + clampN(a, 0, 1).toFixed(3) + ")";
+
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+
+                sea.length = 0;
+                soil.length = 0;
+                for (let bi = 0; bi < 8; bi++) if (land8[bi]) land8[bi].length = 0;
+
+                for (let i = 0; i < nodes.length; i++) {
+                    const nd = nodes[i];
+                    const cl = Math.cos(nd.lat);
+                    const x0 = cl * Math.cos(nd.lon);
+                    const y0 = Math.sin(nd.lat);
+                    const z0 = cl * Math.sin(nd.lon);
+                    const x1 = x0 * cs - z0 * sn;
+                    const z1 = x0 * sn + z0 * cs;
+                    const y2 = y0 * ct - z1 * st;
+                    const z2 = y0 * st + z1 * ct;
+                    if (z2 <= 0.02) continue;
+
+                    const px = cx + x1 * R;
+                    const py = cy - y2 * R;
+                    const ddx = px - lx;
+                    const ddy = py - ly;
+                    const glow = ddx * ddx + ddy * ddy < lr2 ? (1 - Math.sqrt(ddx * ddx + ddy * ddy) / lr) * lightK : 0;
+                    if (!nd.land) {
+                        sea.push(px, py, Math.min(0.999, z2 + glow * 0.55));
+                        continue;
+                    }
+                    if (!nd.c) {
+                        soil.push(px, py, Math.min(0.999, z2 + glow * 0.55));
+                        continue;
+                    }
+
+                    const tx0 = -Math.sin(nd.lon);
+                    const tz0 = Math.cos(nd.lon);
+                    const tx1 = tx0 * cs - tz0 * sn;
+                    const tz1 = tx0 * sn + tz0 * cs;
+                    const ang = Math.round(Math.atan2(tz1 * st, tx1) / QA) * QA;
+                    const b = Math.min(7, Math.max(0, (Math.min(0.999, z2 + glow * 0.6) * 7.99) | 0));
+                    (land8[b] || (land8[b] = [])).push(px, py, ang, i);
+                }
+
+                const dmin = Math.max(0.7, u * 0.0029);
+                const dots = (list, baseA, gain, grow) => {
+                    for (let lvl = 0; lvl < 6; lvl++) {
+                        const z = (lvl + 0.5) / 6;
+                        const dsz = dmin * grow * (0.55 + 0.75 * z);
+                        ctx.fillStyle = tone(baseA + gain * z);
+                        ctx.beginPath();
+                        for (let q = 0; q < list.length; q += 3) {
+                            const lv = list[q + 2] >= 1 ? 5 : (list[q + 2] * 6) | 0;
+                            if (lv !== lvl) continue;
+                            ctx.rect(list[q] - dsz / 2, list[q + 1] - dsz / 2, dsz, dsz);
+                        }
+                        ctx.fill();
+                    }
+                };
+                dots(sea, 0.1, 0.22, 1.0);
+                dots(soil, 0.34, 0.46, 1.7);
+
+                for (let bi = 0; bi < 8; bi++) {
+                    const arr = land8[bi];
+                    if (!arr || !arr.length) continue;
+                    const zb = (bi + 0.5) / 8;
+                    ctx.font = "bold " + (fs * (0.42 + 0.58 * zb)).toFixed(2) + "px " + FACE;
+                    ctx.fillStyle = tone(0.28 + 0.72 * Math.pow(zb, 0.6));
+                    for (let t = 0; t < arr.length; t += 4) {
+                        ctx.save();
+                        ctx.translate(arr[t], arr[t + 1]);
+                        ctx.rotate(arr[t + 2]);
+                        ctx.fillText(nodes[arr[t + 3]].c, 0, 0);
+                        ctx.restore();
+                    }
+                }
+
+                for (let pi = 0; pi < pins.length; pi++) {
+                    const pn = pins[pi];
+                    const pcl = Math.cos(pn.lat);
+                    const ax = pcl * Math.cos(pn.lon);
+                    const ay = Math.sin(pn.lat);
+                    const az = pcl * Math.sin(pn.lon);
+                    const bx1 = ax * cs - az * sn;
+                    const bz1 = ax * sn + az * cs;
+                    const by2 = ay * ct - bz1 * st;
+                    const bz2 = ay * st + bz1 * ct;
+                    if (bz2 <= 0.02) continue;
+                    
+                    const ppx = cx + bx1 * R;
+                    const ppy = cy - by2 * R;
+                    const age = clock - pn.t;
+                    const pop = Math.min(1, age / 0.22);
+                    const rr2 = u * 0.016 * (0.4 + 0.6 * pop) * (0.55 + 0.45 * bz2);
+                    
+                    ctx.beginPath();
+                    ctx.arc(ppx, ppy, rr2, 0, Math.PI * 2);
+                    ctx.strokeStyle = tone(0.3 + 0.55 * bz2);
+                    ctx.lineWidth = Math.max(0.7, u * 0.0022);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.arc(ppx, ppy, Math.max(0.7, rr2 * 0.22), 0, Math.PI * 2);
+                    ctx.fillStyle = tone(0.45 + 0.55 * bz2);
+                    ctx.fill();
+                    
+                    if (age < 0.9) {
+                        const w2 = 1 - age / 0.9;
+                        ctx.beginPath();
+                        ctx.arc(ppx, ppy, rr2 + (1 - w2) * u * 0.05, 0, Math.PI * 2);
+                        ctx.strokeStyle = tone(0.55 * w2 * w2);
+                        ctx.lineWidth = Math.max(0.6, u * 0.0016);
+                        ctx.stroke();
+                    }
+                }
+
+                raf = requestAnimationFrame(render);
+            };
+
+            let lastX = 0;
+            let lastY = 0;
+            const localPoint = (e) => {
+                const r = canvas.getBoundingClientRect();
+                if (r.width <= 0 || r.height <= 0) return null;
+                const cw = sizeRef.w || canvas.clientWidth || 1200;
+                const ch = sizeRef.h || canvas.clientHeight || 800;
+                return { x: ((e.clientX - r.left) / r.width) * cw, y: ((e.clientY - r.top) / r.height) * ch };
+            };
+
+            const track = (e) => {
+                const p = localPoint(e);
+                if (!p) return;
+                ptr.on = 1;
+                if (ptr.dragging) {
+                    const u = Math.min(sizeRef.w || 1200, sizeRef.h || 800);
+                    ptr.dx += (p.x - lastX) / u;
+                    ptr.dy += (p.y - lastY) / u;
+                    ptr.moved = 1;
+                }
+                ptr.x = p.x;
+                ptr.y = p.y;
+                lastX = p.x;
+                lastY = p.y;
+            };
+
+            const onDown = (e) => {
+                const p = localPoint(e);
+                if (!p) return;
+                ptr.dragging = 1;
+                ptr.moved = 0;
+                ptr.x = p.x;
+                ptr.y = p.y;
+                lastX = p.x;
+                lastY = p.y;
+                try { canvas.setPointerCapture(e.pointerId); } catch (err) {}
+            };
+
+            const onUp = () => {
+                if (ptr.dragging && !ptr.moved) ptr.click++;
+                ptr.dragging = 0;
+            };
+            const onLeave = () => { if (!ptr.dragging) ptr.on = 0; };
+            const onWheel = (e) => {
+                if (v.zoom <= 0) return;
+                e.preventDefault();
+                zoomT = clampN(zoomT * Math.exp(-e.deltaY * 0.0016 * v.zoom), 0.85, 2.6);
+            };
+
+            canvas.addEventListener("pointermove", track);
+            canvas.addEventListener("pointerenter", track);
+            canvas.addEventListener("pointerleave", onLeave);
+            canvas.addEventListener("pointerdown", onDown);
+            window.addEventListener("pointerup", onUp);
+            window.addEventListener("pointercancel", onUp);
+            canvas.addEventListener("wheel", onWheel, { passive: false });
+            
+            raf = requestAnimationFrame(render);
+        }
+
+        // Initialize Globe when page is ready
+        window.addEventListener('DOMContentLoaded', () => {
+            initGlobe('globe-canvas');
+        });
+    </script>
+</body>
+</html>
